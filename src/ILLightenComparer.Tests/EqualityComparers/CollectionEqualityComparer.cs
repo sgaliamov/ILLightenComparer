@@ -9,10 +9,10 @@ namespace ILLightenComparer.Tests.EqualityComparers
 {
     internal sealed class CollectionEqualityComparer<TItem> : IEqualityComparer<IEnumerable<TItem>>, IEqualityComparer, IHashSeedSetter
     {
-        private readonly IComparer<TItem> _sortComparer;
         private readonly IEqualityComparer<TItem> _itemComparer;
+        private readonly AsyncLocal<long> _seed = new();
         private readonly bool _sort;
-        private readonly AsyncLocal<long> _seed = new AsyncLocal<long>();
+        private readonly IComparer<TItem> _sortComparer;
 
         public CollectionEqualityComparer(IEqualityComparer<TItem> itemComparer = null, bool sort = false, IComparer<TItem> sortComparer = null)
         {
@@ -21,6 +21,8 @@ namespace ILLightenComparer.Tests.EqualityComparers
             _itemComparer = itemComparer ?? EqualityComparer<TItem>.Default;
             _seed.Value = HashCodeCombiner.Seed;
         }
+
+        bool IEqualityComparer.Equals(object x, object y) => Equals((IEnumerable<TItem>)x, (IEnumerable<TItem>)y);
 
         public bool Equals(IEnumerable<TItem> x, IEnumerable<TItem> y)
         {
@@ -67,7 +69,7 @@ namespace ILLightenComparer.Tests.EqualityComparers
             }
         }
 
-        bool IEqualityComparer.Equals(object x, object y) => Equals((IEnumerable<TItem>)x, (IEnumerable<TItem>)y);
+        public int GetHashCode(object obj) => GetHashCode((IEnumerable<TItem>)obj);
 
         public int GetHashCode(IEnumerable<TItem> obj)
         {
@@ -83,8 +85,6 @@ namespace ILLightenComparer.Tests.EqualityComparers
 
             return HashCodeCombiner.Start(_seed.Value).Combine(_itemComparer, obj.ToArray());
         }
-
-        public int GetHashCode(object obj) => GetHashCode((IEnumerable<TItem>)obj);
 
         public void SetHashSeed(long seed) => _seed.Value = seed;
     }

@@ -17,8 +17,8 @@ namespace ILLightenComparer.Tests.ComparerTests.HierarchyTests.Samples.Nested
             }
 
             return obj is AbstractNestedObject other
-                       ? CompareTo(other)
-                       : throw new ArgumentException($"Object must be of type {nameof(AbstractNestedObject)}.");
+                ? CompareTo(other)
+                : throw new ArgumentException($"Object must be of type {nameof(AbstractNestedObject)}.");
         }
 
         private int CompareTo(INestedObject other) => string.CompareOrdinal(Text, other.Text);

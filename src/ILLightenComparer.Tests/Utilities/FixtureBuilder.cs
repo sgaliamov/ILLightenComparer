@@ -11,7 +11,7 @@ namespace ILLightenComparer.Tests.Utilities
 {
     public static class FixtureBuilder
     {
-        private static readonly Lazy<Fixture> Fixture = new Lazy<Fixture>(
+        private static readonly Lazy<Fixture> Fixture = new(
             () => {
                 var f = new Fixture { RepeatCount = Constants.SmallCount };
 
@@ -21,7 +21,7 @@ namespace ILLightenComparer.Tests.Utilities
             },
             LazyThreadSafetyMode.ExecutionAndPublication);
 
-        private static readonly Lazy<Fixture> SimpleFixture = new Lazy<Fixture>(
+        private static readonly Lazy<Fixture> SimpleFixture = new(
             () => {
                 var f = new Fixture { RepeatCount = Constants.SmallCount };
 
@@ -89,13 +89,12 @@ namespace ILLightenComparer.Tests.Utilities
             return context.Resolve(type);
         }
 
-        private static Action<object, object> GetSetValueAction(Member member) => member.MemberInfo switch
-        {
+        private static Action<object, object> GetSetValueAction(Member member) => member.MemberInfo switch {
             FieldInfo fieldInfo => fieldInfo.SetValue,
             PropertyInfo propertyInfo => propertyInfo.GetSetMethod(true) == null
                 ? (Action<object, object>)null
                 : propertyInfo.SetValue,
-            _ => throw new NotSupportedException(),
+            _ => throw new NotSupportedException()
         };
 
         private static object GetNewValue(Type type, object oldValue)

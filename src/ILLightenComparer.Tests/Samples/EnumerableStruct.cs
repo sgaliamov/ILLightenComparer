@@ -9,7 +9,10 @@ namespace ILLightenComparer.Tests.Samples
     {
         private readonly IEnumerable<T> _enumerable;
 
-        public EnumerableStruct(IEnumerable<T> enumerable) => _enumerable = enumerable;
+        public EnumerableStruct(IEnumerable<T> enumerable)
+        {
+            _enumerable = enumerable;
+        }
 
         public IEnumerator<T> GetEnumerator() => _enumerable?.GetEnumerator();
 

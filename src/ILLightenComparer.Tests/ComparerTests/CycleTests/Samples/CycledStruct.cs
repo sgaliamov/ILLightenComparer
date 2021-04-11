@@ -14,19 +14,6 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests.Samples
 
         public sealed class RelationalComparer : IComparer<CycledStruct>
         {
-            public int Compare(CycledStruct x, CycledStruct y)
-            {
-                var setX = new CycleDetectionSet();
-                var setY = new CycleDetectionSet();
-
-                var compare = Compare(x, y, setX, setY);
-                if (compare != 0) {
-                    return compare;
-                }
-
-                return setX.Count - setY.Count;
-            }
-
             public static int Compare(
                 CycledStruct? x,
                 CycledStruct? y,
@@ -61,6 +48,19 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests.Samples
                 }
 
                 return CycledStructObject.RelationalComparer.Compare(x.SecondObject, y.SecondObject, xSet, ySet);
+            }
+
+            public int Compare(CycledStruct x, CycledStruct y)
+            {
+                var setX = new CycleDetectionSet();
+                var setY = new CycleDetectionSet();
+
+                var compare = Compare(x, y, setX, setY);
+                if (compare != 0) {
+                    return compare;
+                }
+
+                return setX.Count - setY.Count;
             }
         }
     }

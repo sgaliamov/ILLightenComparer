@@ -21,25 +21,6 @@ namespace ILLightenComparer.Benchmarks.Benchmark
         [SuppressMessage("Code Quality", "IDE0052:Remove unread private members", Justification = "<Pending>")]
         private int _out;
 
-        [GlobalSetup]
-        public void Setup()
-        {
-            var random = new Random();
-
-            for (var i = 0; i < N; i++) {
-                _one[i] = (byte)random.Next(byte.MinValue, byte.MaxValue);
-                _other[i] = (byte)random.Next(byte.MinValue, byte.MaxValue);
-            }
-        }
-
-        [Benchmark(Baseline = true)]
-        public void Sub() // fastest
-        {
-            for (var i = 0; i < N; i++) {
-                _out = _one[i] - _other[i];
-            }
-        }
-
         [Benchmark]
         public void CompareTo()
         {
@@ -62,6 +43,25 @@ namespace ILLightenComparer.Benchmarks.Benchmark
                 } else if (one > other) {
                     _out = 1;
                 }
+            }
+        }
+
+        [GlobalSetup]
+        public void Setup()
+        {
+            var random = new Random();
+
+            for (var i = 0; i < N; i++) {
+                _one[i] = (byte)random.Next(byte.MinValue, byte.MaxValue);
+                _other[i] = (byte)random.Next(byte.MinValue, byte.MaxValue);
+            }
+        }
+
+        [Benchmark(Baseline = true)]
+        public void Sub() // fastest
+        {
+            for (var i = 0; i < N; i++) {
+                _out = _one[i] - _other[i];
             }
         }
     }

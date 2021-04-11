@@ -4,7 +4,7 @@ namespace ILLightenComparer.Tests.Utilities
 {
     internal sealed class ThreadSafeRandom
     {
-        private static readonly Random Global = new Random();
+        private static readonly Random Global = new();
 
         [ThreadStatic] private static Random _local;
 

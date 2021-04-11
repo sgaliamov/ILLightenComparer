@@ -9,7 +9,10 @@ namespace ILLightenComparer.Tests.Comparers
     {
         private readonly IComparer<TMember> _memberComparer;
 
-        public SampleStructComparer(IComparer<TMember> memberComparer = null) => _memberComparer = memberComparer ?? Helper.DefaultComparer<TMember>();
+        public SampleStructComparer(IComparer<TMember> memberComparer = null)
+        {
+            _memberComparer = memberComparer ?? Helper.DefaultComparer<TMember>();
+        }
 
         public int Compare(object x, object y)
         {

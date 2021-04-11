@@ -30,6 +30,30 @@ namespace ILLightenComparer.Benchmarks.Benchmark.Comparer
             _nito = nito;
         }
 
+        [Benchmark(Description = "IL Lighten Comparer")]
+        public void IL_Comparer()
+        {
+            for (var i = 0; i < N; i++) {
+                _out = _il.Compare(_one[i], _other[i]);
+            }
+        }
+
+        [Benchmark(Baseline = true, Description = "Manual implementation")]
+        public void Manual_Comparer()
+        {
+            for (var i = 0; i < N; i++) {
+                _out = _manual.Compare(_one[i], _other[i]);
+            }
+        }
+
+        [Benchmark(Description = "Nito Comparer")]
+        public void Nito_Comparer()
+        {
+            for (var i = 0; i < N; i++) {
+                _out = _nito.Compare(_one[i], _other[i]);
+            }
+        }
+
         [GlobalSetup]
         public void Setup()
         {
@@ -59,30 +83,6 @@ namespace ILLightenComparer.Benchmarks.Benchmark.Comparer
                 if (compare != Normalize(_nito.Compare(_one[i], _other[i]))) {
                     throw new InvalidOperationException("Nito comparer is broken.");
                 }
-            }
-        }
-
-        [Benchmark(Description = "IL Lighten Comparer")]
-        public void IL_Comparer()
-        {
-            for (var i = 0; i < N; i++) {
-                _out = _il.Compare(_one[i], _other[i]);
-            }
-        }
-
-        [Benchmark(Baseline = true, Description = "Manual implementation")]
-        public void Manual_Comparer()
-        {
-            for (var i = 0; i < N; i++) {
-                _out = _manual.Compare(_one[i], _other[i]);
-            }
-        }
-
-        [Benchmark(Description = "Nito Comparer")]
-        public void Nito_Comparer()
-        {
-            for (var i = 0; i < N; i++) {
-                _out = _nito.Compare(_one[i], _other[i]);
             }
         }
     }

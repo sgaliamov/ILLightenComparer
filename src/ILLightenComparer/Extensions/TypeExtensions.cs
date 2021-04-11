@@ -10,16 +10,34 @@ namespace ILLightenComparer.Extensions
 {
     internal static class TypeExtensions
     {
-        private static readonly HashSet<Type> SmallIntegralTypes = new(new[] { typeof(sbyte), typeof(byte), typeof(char), typeof(short), typeof(ushort) });
+        private static readonly HashSet<Type> SmallIntegralTypes = new(new[] {
+            typeof(sbyte),
+            typeof(byte),
+            typeof(char),
+            typeof(short),
+            typeof(ushort)
+        });
 
-        private static readonly HashSet<Type> CeqCompatibleTypes = new(new[] { typeof(sbyte), typeof(byte), typeof(char), typeof(short), typeof(ushort), typeof(int), typeof(long), typeof(ulong), typeof(float), typeof(double) });
+        private static readonly HashSet<Type> CeqCompatibleTypes = new(new[] {
+            typeof(sbyte),
+            typeof(byte),
+            typeof(char),
+            typeof(short),
+            typeof(ushort),
+            typeof(int),
+            typeof(long),
+            typeof(ulong),
+            typeof(float),
+            typeof(double)
+        });
 
-        private static readonly HashSet<Type> BasicTypes = new(typeof(object).Assembly
-            .GetTypes()
-            .Where(x => x.FullName!.StartsWith("System."))
-            .Where(x => x.IsPublic)
-            .Where(x => !x.IsGenericType)
-            .Except(new[] { typeof(object) })); // object is treated separately
+        private static readonly HashSet<Type> BasicTypes =
+            new(typeof(object).Assembly
+                              .GetTypes()
+                              .Where(x => x.FullName!.StartsWith("System."))
+                              .Where(x => x.IsPublic)
+                              .Where(x => !x.IsGenericType)
+                              .Except(new[] { typeof(object) })); // object is treated separately
 
         /// <summary>
         ///     Not objects and structures.
@@ -80,9 +98,9 @@ namespace ILLightenComparer.Extensions
         /// <summary>
         ///     Creates instance using static method.
         /// </summary>
-        public static TReturnType CreateInstance<T, TReturnType>(this Type type, T arg) => type
-            .GetMethod(nameof(CreateInstance))
-            .CreateDelegate<Func<T, TReturnType>>()(arg); // todo: 1. cache delegates?
+        public static TReturnType CreateInstance<T, TReturnType>(this Type type, T arg) =>
+            type.GetMethod(nameof(CreateInstance))
+                .CreateDelegate<Func<T, TReturnType>>()(arg); // todo: 1. cache delegates?
 
         /// <summary>
         ///     Creates instance using default constructor.
@@ -128,11 +146,10 @@ namespace ILLightenComparer.Extensions
         public static MethodInfo FindMethod(this Type type, string name, Type[] types)
         {
             if (type.IsInterface) {
-                return type
-                    .GetMethod(name, types) ?? type
-                    .GetInterfaces()
-                    .Select(i => FindMethod(i, name, types))
-                    .FirstOrDefault(m => m != null);
+                return type.GetMethod(name, types)
+                       ?? type.GetInterfaces()
+                              .Select(i => FindMethod(i, name, types))
+                              .FirstOrDefault(m => m != null);
             }
 
             return type.GetMethod(name, types);

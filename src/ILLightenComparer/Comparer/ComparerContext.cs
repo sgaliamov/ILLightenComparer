@@ -12,9 +12,9 @@ namespace ILLightenComparer.Comparer
     internal sealed class ComparerContext : IComparerContext
     {
         private const string CompareMethodName = nameof(IComparer.Compare);
-        private readonly GenericProvider _genericProvider;
-        private readonly ComparersCollection _emittedComparers = new ComparersCollection();
         private readonly IConfigurationProvider _configuration;
+        private readonly ComparersCollection _emittedComparers = new();
+        private readonly GenericProvider _genericProvider;
 
         public ComparerContext(MembersProvider membersProvider, IConfigurationProvider configuration)
         {
@@ -29,8 +29,10 @@ namespace ILLightenComparer.Comparer
             _genericProvider = new GenericProvider(typeof(IComparer<>), new GenericTypeBuilder(methodEmitters, _configuration));
         }
 
-        public IComparer<T> GetComparer<T>() => _configuration.GetCustomComparer<T>()
-           ?? (IComparer<T>)_emittedComparers.GetOrAdd(typeof(T), key => CreateInstance<T>(key));
+        private IComparer<T> CreateInstance<T>(Type key) =>
+            _genericProvider
+                .EnsureComparerType(key)
+                .CreateInstance<IComparerContext, IComparer<T>>(this);
 
         public int DelayedCompare<T>(T x, T y, CycleDetectionSet xSet, CycleDetectionSet ySet)
         {
@@ -40,8 +42,13 @@ namespace ILLightenComparer.Comparer
             }
 
             if (!typeof(T).IsValueType) {
-                if (x == null) { return y == null ? 0 : -1; }
-                if (y == null) { return 1; }
+                if (x == null) {
+                    return y == null ? 0 : -1;
+                }
+
+                if (y == null) {
+                    return 1;
+                }
             }
 
             var xType = x.GetType();
@@ -59,13 +66,16 @@ namespace ILLightenComparer.Comparer
             return compareMethod.InvokeCompare<IComparerContext, T, int>(xType, this, x, y, xSet, ySet);
         }
 
-        public MethodInfo GetStaticCompareMethodInfo(Type type) => _genericProvider.GetStaticMethodInfo(type, CompareMethodName);
+        public IComparer<T> GetComparer<T>() =>
+            _configuration.GetCustomComparer<T>()
+            ?? (IComparer<T>)_emittedComparers
+                .GetOrAdd(typeof(T), CreateInstance<T>);
 
-        public MethodInfo GetCompiledStaticCompareMethod(Type type) => _genericProvider.GetCompiledStaticMethod(type, CompareMethodName);
+        public MethodInfo GetCompiledStaticCompareMethod(Type type) =>
+            _genericProvider.GetCompiledStaticMethod(type, CompareMethodName);
 
-        private IComparer<T> CreateInstance<T>(Type key) => _genericProvider
-            .EnsureComparerType(key)
-            .CreateInstance<IComparerContext, IComparer<T>>(this);
+        public MethodInfo GetStaticCompareMethodInfo(Type type) =>
+            _genericProvider.GetStaticMethodInfo(type, CompareMethodName);
     }
 
     internal interface IComparerContext : IComparerProvider, IContext

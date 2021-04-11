@@ -8,6 +8,8 @@ namespace ILLightenComparer.Tests
 {
     public sealed class ComparerExamples
     {
+        private readonly Fixture _fixture = new();
+
         [Fact]
         public void Basic_usage()
         {
@@ -50,8 +52,8 @@ namespace ILLightenComparer.Tests
 
             // defines configuration for specific types
             builder.For<Tuple<short, string>>(c => c.DefineMembersOrder(
-                order => order.Member(o => o.Item2)
-                              .Member(o => o.Item2)));
+                                                  order => order.Member(o => o.Item2)
+                                                                .Member(o => o.Item2)));
 
             // adds additional configuration to existing configuration
             builder.For<Tuple<int, string, Tuple<short, string>>>(c => c.IncludeFields(false));
@@ -69,9 +71,8 @@ namespace ILLightenComparer.Tests
 
             // initially configuration defines case insensitive string comparison
             var builder = new ComparerBuilder()
-                .For<Tuple<int, string>>(c => c
-                    .SetStringComparisonType(StringComparison.CurrentCultureIgnoreCase)
-                    .DetectCycles(false));
+                .For<Tuple<int, string>>(c => c.SetStringComparisonType(StringComparison.CurrentCultureIgnoreCase)
+                                               .DetectCycles(false));
 
             // in addition, setup to ignore first member
             builder.Configure(c => c.IgnoreMember(o => o.Item1));
@@ -81,9 +82,9 @@ namespace ILLightenComparer.Tests
 
             // override string comparison type with case sensitive value and build new comparer
             var originalCaseComparer = builder
-                .For<Tuple<int, string>>()
-                .Configure(c => c.SetStringComparisonType(StringComparison.Ordinal))
-                .GetComparer();
+                                       .For<Tuple<int, string>>()
+                                       .Configure(c => c.SetStringComparisonType(StringComparison.Ordinal))
+                                       .GetComparer();
 
             // first comparer ignores case for strings still
             ignoreCaseComparer.Compare(x, y).Should().Be(0);
@@ -125,7 +126,5 @@ namespace ILLightenComparer.Tests
 
             result.Should().Be(0);
         }
-
-        private readonly Fixture _fixture = new Fixture();
     }
 }

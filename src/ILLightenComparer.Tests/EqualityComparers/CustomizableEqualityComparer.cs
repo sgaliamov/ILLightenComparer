@@ -15,12 +15,12 @@ namespace ILLightenComparer.Tests.EqualityComparers
             _hasher = hasher;
         }
 
-        public bool Equals(T x, T y) => _comparer(x, y);
-
         public new bool Equals(object x, object y) => Equals((T)x, (T)y);
 
-        public int GetHashCode(T obj) => _hasher(obj);
+        public bool Equals(T x, T y) => _comparer(x, y);
 
         public int GetHashCode(object obj) => GetHashCode((T)obj);
+
+        public int GetHashCode(T obj) => _hasher(obj);
     }
 }

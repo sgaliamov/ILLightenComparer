@@ -18,8 +18,8 @@ namespace ILLightenComparer.Tests.ComparerTests.HierarchyTests.Samples.Nested
             }
 
             return obj is BaseNestedObject other
-                       ? CompareTo(other)
-                       : throw new ArgumentException($"Object must be of type {nameof(BaseNestedObject)}");
+                ? CompareTo(other)
+                : throw new ArgumentException($"Object must be of type {nameof(BaseNestedObject)}");
         }
 
         private int CompareTo(BaseNestedObject other)

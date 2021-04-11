@@ -1,35 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
-		<LangVersion>latest</LangVersion>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
 
-	<PropertyGroup>
-		<Authors>S. Galiamov</Authors>
-		<Description>ILLightenComparer is a flexible library that can generate very effective and comprehensive IComparer&lt;T&gt; and IEqualityComparer&lt;T&gt; implementations on runtime using advantages of IL code emission.</Description>
-		<Owners>S. Galiamov</Owners>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageProjectUrl>https://sgaliamov.github.io/il-lighten-comparer</PackageProjectUrl>
-		<PackageTags>IEqualityComparer, IComparer, Reflection, MSIL, IL, Code-Generation, Comparison</PackageTags>
-		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/sgaliamov/il-lighten-comparer.git</RepositoryUrl>
-	</PropertyGroup>
+  <PropertyGroup>
+    <Authors>S. Galiamov</Authors>
+    <Description>ILLightenComparer is a flexible library that can generate very effective and comprehensive IComparer&lt;T&gt; and IEqualityComparer&lt;T&gt; implementations on runtime using advantages of IL code emission.</Description>
+    <Owners>S. Galiamov</Owners>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://sgaliamov.github.io/il-lighten-comparer</PackageProjectUrl>
+    <PackageTags>IEqualityComparer, IComparer, Reflection, MSIL, IL, Code-Generation, Comparison</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/sgaliamov/il-lighten-comparer.git</RepositoryUrl>
+  </PropertyGroup>
 
-	<PropertyGroup>
-		<Version>0.0.0.0</Version>
-		<AssemblyVersion>0.0.0.0</AssemblyVersion>
-		<FileVersion>0.0.0.0</FileVersion>
-		<InformationalVersion>0.0.0.0</InformationalVersion>
-	</PropertyGroup>
+  <PropertyGroup>
+    <Version>0.0.0.0</Version>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <InformationalVersion>0.0.0.0</InformationalVersion>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DebugType>full</DebugType>
-	</PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Illuminator" Version="0.4.0" />
-		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Illuminator" Version="0.4.0" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+  </ItemGroup>
 
 </Project>

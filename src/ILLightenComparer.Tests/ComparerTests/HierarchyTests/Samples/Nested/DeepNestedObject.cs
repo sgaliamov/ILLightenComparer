@@ -4,9 +4,8 @@ namespace ILLightenComparer.Tests.ComparerTests.HierarchyTests.Samples.Nested
 {
     public class DeepNestedObject
     {
-        public float FloatField;
-
         public static IComparer<DeepNestedObject> Comparer { get; } = new RelationalComparer();
+        public float FloatField;
 
         public float FloatProperty { get; set; }
 

@@ -11,6 +11,20 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests
 {
     public sealed class MultiThreadingTests
     {
+        private static IEqualityComparer<AbstractMembers> CreateComparer()
+        {
+            return new ComparerBuilder()
+                   .For<AnotherNestedObject>(
+                       c => c.DefineMembersOrder(
+                           order => order.Member(o => o.Value)
+                                         .Member(o => o.Key)
+                                         .Member(o => o.Text)))
+                   .For<AbstractMembers>()
+                   .GetEqualityComparer();
+        }
+
+        private readonly Fixture _fixture;
+
         public MultiThreadingTests()
         {
             _fixture = new Fixture();
@@ -46,18 +60,5 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests
                 });
             });
         }
-
-        private static IEqualityComparer<AbstractMembers> CreateComparer()
-        {
-            return new ComparerBuilder()
-                .For<AnotherNestedObject>(c => c.DefineMembersOrder(order => order
-                    .Member(o => o.Value)
-                    .Member(o => o.Key)
-                    .Member(o => o.Text)))
-                .For<AbstractMembers>()
-                .GetEqualityComparer();
-        }
-
-        private readonly Fixture _fixture;
     }
 }

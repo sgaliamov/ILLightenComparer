@@ -8,10 +8,13 @@ namespace ILLightenComparer.Tests.Utilities
 {
     internal sealed class ObjectWalker
     {
-        private readonly HashSet<Member> _cache = new HashSet<Member>();
-        private readonly Stack<Member> _toWalk = new Stack<Member>();
+        private readonly HashSet<Member> _cache = new();
+        private readonly Stack<Member> _toWalk = new();
 
-        public ObjectWalker(Member root) => Schedule(root);
+        public ObjectWalker(Member root)
+        {
+            Schedule(root);
+        }
 
         public Member Current { get; private set; }
 
@@ -40,18 +43,18 @@ namespace ILLightenComparer.Tests.Utilities
                 switch (info) {
                     case FieldInfo fieldInfo:
                         Schedule(new Member(
-                            Current.Value,
-                            fieldInfo,
-                            fieldInfo.FieldType,
-                            fieldInfo.GetValue(Current.Value)));
+                                     Current.Value,
+                                     fieldInfo,
+                                     fieldInfo.FieldType,
+                                     fieldInfo.GetValue(Current.Value)));
                         break;
 
                     case PropertyInfo propertyInfo:
                         Schedule(new Member(
-                            Current.Value,
-                            propertyInfo,
-                            propertyInfo.PropertyType,
-                            propertyInfo.GetValue(Current.Value)));
+                                     Current.Value,
+                                     propertyInfo,
+                                     propertyInfo.PropertyType,
+                                     propertyInfo.GetValue(Current.Value)));
                         break;
 
                     default:
@@ -109,6 +112,11 @@ namespace ILLightenComparer.Tests.Utilities
             return obj is Member other && Equals(other);
         }
 
+        public bool Equals(Member other) =>
+            Equals(MemberInfo, other.MemberInfo)
+            && Equals(Parent, other.Parent)
+            && Equals(Value, other.Value);
+
         public override int GetHashCode()
         {
             unchecked {
@@ -119,10 +127,5 @@ namespace ILLightenComparer.Tests.Utilities
                 return hashCode;
             }
         }
-
-        public bool Equals(Member other) =>
-            Equals(MemberInfo, other.MemberInfo)
-            && Equals(Parent, other.Parent)
-            && Equals(Value, other.Value);
     }
 }

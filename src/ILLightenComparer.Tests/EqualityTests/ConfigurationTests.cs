@@ -9,6 +9,8 @@ namespace ILLightenComparer.Tests.EqualityTests
 {
     public sealed class ConfigurationTests
     {
+        private readonly Fixture _fixture = new();
+
         [Fact]
         public void Ignore_all_members_using_expressions()
         {
@@ -44,7 +46,5 @@ namespace ILLightenComparer.Tests.EqualityTests
                 comparer3.Equals(x, y).Should().Be(expected);
             }
         }
-
-        private readonly Fixture _fixture = new Fixture();
     }
 }

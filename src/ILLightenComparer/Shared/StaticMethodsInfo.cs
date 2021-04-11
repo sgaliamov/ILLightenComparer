@@ -26,16 +26,17 @@ namespace ILLightenComparer.Shared
         public Type TypedComparerInterface { get; }
         public TypeBuilder ComparerTypeBuilder { get; }
 
-        public bool IsCompiled(string name) => _methods.TryGetValue(name, out var info) && info.Item2;
-
         public bool AllCompiled() => _methods.All(x => x.Value.Item2);
 
-        public IReadOnlyCollection<MethodBuilder> GetAllMethodBuilders() => _methods
-            .Values
-            .Select(x => (MethodBuilder)x.Item1)
-            .ToArray();
+        public IReadOnlyCollection<MethodBuilder> GetAllMethodBuilders() =>
+            _methods
+                .Values
+                .Select(x => (MethodBuilder)x.Item1)
+                .ToArray();
 
         public MethodInfo GetMethodInfo(string name) => _methods[name].Item1;
+
+        public bool IsCompiled(string name) => _methods.TryGetValue(name, out var info) && info.Item2;
 
         public void SetCompiledMethod(MethodInfo method) => _methods[method.Name] = (method, true);
     }

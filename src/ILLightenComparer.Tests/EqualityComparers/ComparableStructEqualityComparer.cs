@@ -8,16 +8,9 @@ namespace ILLightenComparer.Tests.EqualityComparers
     {
         private readonly IEqualityComparer _memberComparer;
 
-        public ComparableStructEqualityComparer(IEqualityComparer memberComparer = null) => _memberComparer = memberComparer ?? EqualityComparer<TMember>.Default;
-
-        public bool Equals(ComparableStruct<TMember> x, ComparableStruct<TMember> y)
+        public ComparableStructEqualityComparer(IEqualityComparer memberComparer = null)
         {
-            var compare = _memberComparer.Equals(x.Field, y.Field);
-            if (!compare) {
-                return false;
-            }
-
-            return _memberComparer.Equals(x.Property, y.Property);
+            _memberComparer = memberComparer ?? EqualityComparer<TMember>.Default;
         }
 
         bool IEqualityComparer.Equals(object x, object y)
@@ -33,6 +26,18 @@ namespace ILLightenComparer.Tests.EqualityComparers
             return Equals((ComparableStruct<TMember>)x, (ComparableStruct<TMember>)y);
         }
 
+        public bool Equals(ComparableStruct<TMember> x, ComparableStruct<TMember> y)
+        {
+            var compare = _memberComparer.Equals(x.Field, y.Field);
+            if (!compare) {
+                return false;
+            }
+
+            return _memberComparer.Equals(x.Property, y.Property);
+        }
+
+        public int GetHashCode(object obj) => GetHashCode((ComparableStruct<TMember>)obj);
+
         public int GetHashCode(ComparableStruct<TMember> obj)
         {
             var setter = _memberComparer as IHashSeedSetter;
@@ -44,7 +49,5 @@ namespace ILLightenComparer.Tests.EqualityComparers
             setter?.SetHashSeed(combiner.CombinedHash);
             return combiner.CombineObjects(obj.Property is null ? 0 : _memberComparer.GetHashCode(obj.Property));
         }
-
-        public int GetHashCode(object obj) => GetHashCode((ComparableStruct<TMember>)obj);
     }
 }

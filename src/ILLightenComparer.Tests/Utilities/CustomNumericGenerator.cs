@@ -24,8 +24,7 @@ namespace ILLightenComparer.Tests.Utilities
                 : CreateRandom(type)
             : new NoSpecimen();
 
-        private object CreateRandom(Type type) => (Type.GetTypeCode(type)) switch
-        {
+        private object CreateRandom(Type type) => Type.GetTypeCode(type) switch {
             TypeCode.Byte => MinMax<byte>(type) ?? (byte)GetNextRandom(),
             TypeCode.Decimal => MinMax<decimal>(type) ?? GetNextRandom(),
             TypeCode.Double => MinMax<double>(type) ?? GetNextRandom(),
@@ -37,7 +36,7 @@ namespace ILLightenComparer.Tests.Utilities
             TypeCode.UInt16 => MinMax<ushort>(type) ?? (ushort)GetNextRandom(),
             TypeCode.UInt32 => MinMax<uint>(type) ?? (uint)GetNextRandom(),
             TypeCode.UInt64 => MinMax<ulong>(type) ?? (ulong)GetNextRandom(),
-            _ => new NoSpecimen(),
+            _ => new NoSpecimen()
         };
 
         private object CreateRandomEnum(Type type)
@@ -51,6 +50,8 @@ namespace ILLightenComparer.Tests.Utilities
             return values[index];
         }
 
+        private long GetNextRandom() => ThreadSafeRandom.Next(_lower, _upper);
+
         private T? MinMax<T>(IReflect request) where T : struct
         {
             if (ThreadSafeRandom.NextDouble() >= _minMaxProbability) {
@@ -63,7 +64,5 @@ namespace ILLightenComparer.Tests.Utilities
                 ? (T)Get(request, "MinValue")
                 : (T)Get(request, "MaxValue");
         }
-
-        private long GetNextRandom() => ThreadSafeRandom.Next(_lower, _upper);
     }
 }

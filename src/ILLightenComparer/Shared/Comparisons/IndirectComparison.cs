@@ -14,17 +14,6 @@ namespace ILLightenComparer.Shared.Comparisons
     /// </summary>
     internal sealed class IndirectComparison : IComparisonEmitter
     {
-        private readonly MethodInfo _method;
-        private readonly IVariable _variable;
-        private readonly EmitterDelegate _checkForIntermediateResultEmitter;
-
-        private IndirectComparison(EmitterDelegate checkForIntermediateResultEmitter, MethodInfo method, IVariable variable)
-        {
-            _checkForIntermediateResultEmitter = checkForIntermediateResultEmitter;
-            _variable = variable;
-            _method = method;
-        }
-
         public static IndirectComparison Create(
             EmitterDelegate checkForIntermediateResultEmitter,
             Func<Type, MethodInfo> staticMethodFactory,
@@ -53,6 +42,17 @@ namespace ILLightenComparer.Shared.Comparisons
             var compareMethod = genericDelayedMethod.MakeGenericMethod(variableType);
 
             return new IndirectComparison(checkForIntermediateResultEmitter, compareMethod, variable);
+        }
+
+        private readonly EmitterDelegate _checkForIntermediateResultEmitter;
+        private readonly MethodInfo _method;
+        private readonly IVariable _variable;
+
+        private IndirectComparison(EmitterDelegate checkForIntermediateResultEmitter, MethodInfo method, IVariable variable)
+        {
+            _checkForIntermediateResultEmitter = checkForIntermediateResultEmitter;
+            _variable = variable;
+            _method = method;
         }
 
         public ILEmitter Emit(ILEmitter il, Label _) =>

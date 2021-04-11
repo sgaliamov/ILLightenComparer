@@ -6,10 +6,9 @@ namespace ILLightenComparer.Tests.ComparerTests.HierarchyTests.Samples
 {
     public class AbstractMembers
     {
+        public static IComparer<AbstractMembers> Comparer { get; } = new RelationalComparer();
         public INestedObject InterfaceField;
         public object ObjectField;
-
-        public static IComparer<AbstractMembers> Comparer { get; } = new RelationalComparer();
 
         public AbstractNestedObject AbstractProperty { get; set; }
         public BaseNestedObject NotSealedProperty { get; set; }

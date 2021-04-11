@@ -13,8 +13,7 @@ namespace ILLightenComparer.Config
             configuration.StringComparisonType,
             configuration.DetectCycles,
             configuration.IgnoreCollectionOrder,
-            configuration.HashSeed)
-        { }
+            configuration.HashSeed) { }
 
         public Configuration(
             IEnumerable<string> ignoredMembers,

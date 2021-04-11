@@ -17,6 +17,7 @@ namespace ILLightenComparer.Tests.EqualityTests
                     if (x is null) {
                         return y is null;
                     }
+
                     return y != null;
                 }, _ => 0),
                 [typeof(sbyte)] = null,
@@ -45,8 +46,8 @@ namespace ILLightenComparer.Tests.EqualityTests
             };
 
             NullableTypes = Types
-                .Where(x => x.Key.IsValueType)
-                .ToDictionary(x => x.Key.MakeNullable(), x => Helper.CreateNullableEqualityComparer(x.Key, x.Value));
+                            .Where(x => x.Key.IsValueType)
+                            .ToDictionary(x => x.Key.MakeNullable(), x => Helper.CreateNullableEqualityComparer(x.Key, x.Value));
         }
 
         public static IDictionary<Type, IEqualityComparer> NullableTypes { get; }

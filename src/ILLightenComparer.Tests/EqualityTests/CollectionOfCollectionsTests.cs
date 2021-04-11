@@ -16,6 +16,97 @@ namespace ILLightenComparer.Tests.EqualityTests
 {
     public sealed class CollectionOfCollectionsTests
     {
+        private static void CompareCollectionOfCollections(Func<Type, Type[]> getCollectionTypes)
+        {
+            Parallel.Invoke(
+                () => CompareCollectionOfCollections(getCollectionTypes, null, null),
+                () => CompareCollectionOfCollections(getCollectionTypes, typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>)),
+                () => CompareCollectionOfCollections(getCollectionTypes, typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>))
+            );
+        }
+
+        private static void CompareCollectionOfCollections(Func<Type, Type[]> getCollectionTypes, Type genericContainer, Type genericSampleComparer)
+        {
+            CompareCollectionOfCollections(getCollectionTypes, false, false, genericContainer, genericSampleComparer);
+            CompareCollectionOfCollections(getCollectionTypes, true, false, genericContainer, genericSampleComparer);
+            CompareCollectionOfCollections(getCollectionTypes, false, true, genericContainer, genericSampleComparer);
+            CompareCollectionOfCollections(getCollectionTypes, true, true, genericContainer, genericSampleComparer);
+        }
+
+        private static void CompareCollectionOfCollections(
+            Func<Type, Type[]> getCollectionTypes,
+            bool sort,
+            bool nullable,
+            Type genericSampleType,
+            Type genericSampleComparer)
+        {
+            var types = nullable ? TestTypes.NullableTypes : TestTypes.Types;
+
+            Parallel.ForEach(types, item => {
+                var (itemType, itemComparer) = item;
+                var collectionTypes = getCollectionTypes(itemType);
+                var types = collectionTypes
+                            .Prepend(itemType)
+                            .Take(collectionTypes.Length);
+
+                var sortComparersMap = types
+                                       .Select(type => (type, typeof(CollectionComparer<>).MakeGenericType(type)))
+                                       .Select<(Type, Type), (Type, IComparer, IComparer)>((current, prev) => {
+                                           var comparer = (IComparer)Activator.CreateInstance(current.Item2, prev.Item2, sort);
+                                           // build `comparer` for the current type `current.Item1` and associate the previous comparer `prev.Item2` with it.
+                                           return (current.Item1, comparer, prev.Item2);
+                                       })
+                                       .ToDictionary(x => x.Item1, x => x.Item3);
+
+                var refereceComparer = types
+                    .Aggregate(itemComparer, (prev, type) => {
+                        var comparerType = typeof(CollectionEqualityComparer<>).MakeGenericType(type);
+                        return (IEqualityComparer)Activator.CreateInstance(comparerType, prev, sort, sort ? sortComparersMap[type] : null);
+                    });
+
+                var combinedType = collectionTypes.Last();
+
+                if (genericSampleType != null) {
+                    var comparerType = genericSampleComparer.MakeGenericType(combinedType);
+                    combinedType = genericSampleType.MakeGenericType(combinedType);
+                    refereceComparer = (IEqualityComparer)Activator.CreateInstance(comparerType, refereceComparer);
+                }
+
+                // todo: 3. try enable hash comparison
+                new GenericTests(sort, false).GenericTest(combinedType, refereceComparer, 1);
+            });
+        }
+
+        private readonly IFixture _fixture = FixtureBuilder.GetInstance();
+
+        [Fact]
+        public void Compare_array_of_array()
+        {
+            Type[] GetCollectionTypes(Type type)
+            {
+                var array1Type = type.MakeArrayType();
+                var array2Type = array1Type.MakeArrayType();
+
+                return new[] { array1Type, array2Type };
+            }
+
+            CompareCollectionOfCollections(GetCollectionTypes);
+        }
+
+        [Fact]
+        public void Compare_array_of_list()
+        {
+            Type[] GetCollectionTypes(Type type)
+            {
+                var arrayType = type.MakeArrayType();
+                var listType = typeof(List<>).MakeGenericType(arrayType);
+
+                return new[] { arrayType, listType };
+            }
+
+            CompareCollectionOfCollections(GetCollectionTypes);
+        }
+
         [Fact]
         public void Compare_enumerables_of_enumerables()
         {
@@ -52,13 +143,17 @@ namespace ILLightenComparer.Tests.EqualityTests
                                         var num8 = enumerator3.Current;
                                         num4 = num7 ^ (num8?.GetHashCode() ?? 0);
                                     }
+
                                     num6 = num4;
                                 }
+
                                 num4 = num5 ^ num6;
                             }
+
                             num3 = num4;
                         }
                     }
+
                     num = num2 ^ num3;
                 }
 
@@ -94,6 +189,49 @@ namespace ILLightenComparer.Tests.EqualityTests
                     hashY.Should().Be(expectedHashY);
                 }
             });
+        }
+
+        [Fact]
+        public void Compare_list_of_array()
+        {
+            Type[] GetCollectionTypes(Type type)
+            {
+                var listType = typeof(List<>).MakeGenericType(type);
+                var arrayType = listType.MakeArrayType();
+
+                return new[] { listType, arrayType };
+            }
+
+            CompareCollectionOfCollections(GetCollectionTypes);
+        }
+
+        [Fact]
+        public void Compare_list_of_list()
+        {
+            Type[] GetCollectionTypes(Type type)
+            {
+                var list1Type = typeof(List<>).MakeGenericType(type);
+                var list2Type = typeof(List<>).MakeGenericType(list1Type);
+
+                return new[] { list1Type, list2Type };
+            }
+
+            CompareCollectionOfCollections(GetCollectionTypes);
+        }
+
+        [Fact]
+        public void Compare_multi_arrays()
+        {
+            var builder = new ComparerBuilder();
+
+            Assert.Throws<NotSupportedException>(() => builder.For<ComparableObject<IEnumerable<int[,]>>>().GetEqualityComparer());
+            Assert.Throws<NotSupportedException>(() => builder.For<ComparableStruct<IEnumerable<int[,]>>>().GetEqualityComparer());
+
+            Assert.Throws<NotSupportedException>(() => builder.For<ComparableObject<int[][,]>>().GetEqualityComparer());
+            Assert.Throws<NotSupportedException>(() => builder.For<ComparableObject<int[,]>>().GetEqualityComparer());
+
+            Assert.Throws<NotSupportedException>(() => builder.For<ComparableStruct<int[][,]>>().GetEqualityComparer());
+            Assert.Throws<NotSupportedException>(() => builder.For<ComparableStruct<int[,]>>().GetEqualityComparer());
         }
 
         [Fact]
@@ -154,6 +292,7 @@ namespace ILLightenComparer.Tests.EqualityTests
                                 num = num8 ^ (num9?.GetHashCode() ?? 0);
                                 num7++;
                             }
+
                             num6 = num;
                         }
 
@@ -193,12 +332,14 @@ namespace ILLightenComparer.Tests.EqualityTests
                                 num = num14 ^ (num9?.GetHashCode() ?? 0);
                                 num7++;
                             }
+
                             num13 = num;
                         }
 
                         num = num12 ^ num13;
                         num4++;
                     }
+
                     num11 = num;
                 }
 
@@ -226,140 +367,6 @@ namespace ILLightenComparer.Tests.EqualityTests
                 hashX.Should().Be(expectedHashX);
                 hashY.Should().Be(expectedHashY);
             }
-        }
-
-        [Fact]
-        public void Compare_array_of_array()
-        {
-            Type[] GetCollectionTypes(Type type)
-            {
-                var array1Type = type.MakeArrayType();
-                var array2Type = array1Type.MakeArrayType();
-
-                return new[] { array1Type, array2Type };
-            }
-
-            CompareCollectionOfCollections(GetCollectionTypes);
-        }
-
-        [Fact]
-        public void Compare_array_of_list()
-        {
-            Type[] GetCollectionTypes(Type type)
-            {
-                var arrayType = type.MakeArrayType();
-                var listType = typeof(List<>).MakeGenericType(arrayType);
-
-                return new[] { arrayType, listType };
-            }
-
-            CompareCollectionOfCollections(GetCollectionTypes);
-        }
-
-        [Fact]
-        public void Compare_list_of_array()
-        {
-            Type[] GetCollectionTypes(Type type)
-            {
-                var listType = typeof(List<>).MakeGenericType(type);
-                var arrayType = listType.MakeArrayType();
-
-                return new[] { listType, arrayType };
-            }
-
-            CompareCollectionOfCollections(GetCollectionTypes);
-        }
-
-        [Fact]
-        public void Compare_list_of_list()
-        {
-            Type[] GetCollectionTypes(Type type)
-            {
-                var list1Type = typeof(List<>).MakeGenericType(type);
-                var list2Type = typeof(List<>).MakeGenericType(list1Type);
-
-                return new[] { list1Type, list2Type };
-            }
-
-            CompareCollectionOfCollections(GetCollectionTypes);
-        }
-
-        [Fact]
-        public void Compare_multi_arrays()
-        {
-            var builder = new ComparerBuilder();
-
-            Assert.Throws<NotSupportedException>(() => builder.For<ComparableObject<IEnumerable<int[,]>>>().GetEqualityComparer());
-            Assert.Throws<NotSupportedException>(() => builder.For<ComparableStruct<IEnumerable<int[,]>>>().GetEqualityComparer());
-
-            Assert.Throws<NotSupportedException>(() => builder.For<ComparableObject<int[][,]>>().GetEqualityComparer());
-            Assert.Throws<NotSupportedException>(() => builder.For<ComparableObject<int[,]>>().GetEqualityComparer());
-
-            Assert.Throws<NotSupportedException>(() => builder.For<ComparableStruct<int[][,]>>().GetEqualityComparer());
-            Assert.Throws<NotSupportedException>(() => builder.For<ComparableStruct<int[,]>>().GetEqualityComparer());
-        }
-
-        private readonly IFixture _fixture = FixtureBuilder.GetInstance();
-
-        private static void CompareCollectionOfCollections(Func<Type, Type[]> getCollectionTypes)
-        {
-            Parallel.Invoke(
-                () => CompareCollectionOfCollections(getCollectionTypes, null, null),
-                () => CompareCollectionOfCollections(getCollectionTypes, typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>)),
-                () => CompareCollectionOfCollections(getCollectionTypes, typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>))
-            );
-        }
-
-        private static void CompareCollectionOfCollections(Func<Type, Type[]> getCollectionTypes, Type genericContainer, Type genericSampleComparer)
-        {
-            CompareCollectionOfCollections(getCollectionTypes, false, false, genericContainer, genericSampleComparer);
-            CompareCollectionOfCollections(getCollectionTypes, true, false, genericContainer, genericSampleComparer);
-            CompareCollectionOfCollections(getCollectionTypes, false, true, genericContainer, genericSampleComparer);
-            CompareCollectionOfCollections(getCollectionTypes, true, true, genericContainer, genericSampleComparer);
-        }
-
-        private static void CompareCollectionOfCollections(
-            Func<Type, Type[]> getCollectionTypes,
-            bool sort,
-            bool nullable,
-            Type genericSampleType,
-            Type genericSampleComparer)
-        {
-            var types = nullable ? TestTypes.NullableTypes : TestTypes.Types;
-
-            Parallel.ForEach(types, item => {
-                var (itemType, itemComparer) = item;
-                var collectionTypes = getCollectionTypes(itemType);
-                var types = collectionTypes
-                    .Prepend(itemType)
-                    .Take(collectionTypes.Length);
-
-                var sortComparersMap = types
-                    .Select(type => (type, typeof(CollectionComparer<>).MakeGenericType(type)))
-                    .Select<(Type, Type), (Type, IComparer, IComparer)>((current, prev) => {
-                        var comparer = (IComparer)Activator.CreateInstance(current.Item2, prev.Item2, sort);
-                        // build `comparer` for the current type `current.Item1` and associate the previous comparer `prev.Item2` with it.
-                        return (current.Item1, comparer, prev.Item2);
-                    })
-                    .ToDictionary(x => x.Item1, x => x.Item3);
-
-                var refereceComparer = types
-                    .Aggregate(itemComparer, (prev, type) => {
-                        var comparerType = typeof(CollectionEqualityComparer<>).MakeGenericType(type);
-                        return (IEqualityComparer)Activator.CreateInstance(comparerType, prev, sort, sort ? sortComparersMap[type] : null);
-                    });
-
-                var combinedType = collectionTypes.Last();
-
-                if (genericSampleType != null) {
-                    var comparerType = genericSampleComparer.MakeGenericType(combinedType);
-                    combinedType = genericSampleType.MakeGenericType(combinedType);
-                    refereceComparer = (IEqualityComparer)Activator.CreateInstance(comparerType, refereceComparer);
-                }
-
-                // todo: 3. try enable hash comparison
-                new GenericTests(sort, false).GenericTest(combinedType, refereceComparer, 1);
-            });
         }
     }
 }

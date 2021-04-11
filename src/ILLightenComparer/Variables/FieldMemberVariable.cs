@@ -7,9 +7,17 @@ namespace ILLightenComparer.Variables
 {
     internal sealed class FieldMemberVariable : IVariable
     {
+        public static IVariable Create(MemberInfo memberInfo) =>
+            memberInfo is FieldInfo info
+                ? new FieldMemberVariable(info)
+                : null;
+
         private readonly FieldInfo _fieldInfo;
 
-        private FieldMemberVariable(FieldInfo fieldInfo) => _fieldInfo = fieldInfo;
+        private FieldMemberVariable(FieldInfo fieldInfo)
+        {
+            _fieldInfo = fieldInfo;
+        }
 
         public Type OwnerType => _fieldInfo.DeclaringType;
         public Type VariableType => _fieldInfo.FieldType;
@@ -26,10 +34,5 @@ namespace ILLightenComparer.Variables
 
             return il.Ldflda(_fieldInfo);
         }
-
-        public static IVariable Create(MemberInfo memberInfo) =>
-            memberInfo is FieldInfo info
-                ? new FieldMemberVariable(info)
-                : null;
     }
 }

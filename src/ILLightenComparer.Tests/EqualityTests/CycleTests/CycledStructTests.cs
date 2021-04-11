@@ -11,35 +11,25 @@ namespace ILLightenComparer.Tests.EqualityTests.CycleTests
 {
     public sealed class CycledStructTests
     {
+        private readonly IComparerBuilder _builder;
+
         public CycledStructTests()
         {
-            _builder = new ComparerBuilder(config => config
-                .DefineMembersOrder<CycledStruct>(order => order
-                    .Member(o => o.Property)
-                    .Member(o => o.FirstObject)
-                    .Member(o => o.SecondObject)))
-                .For<CycledStructObject>(config => config
-                .DefineMembersOrder(order => order
-                    .Member(o => o.TextField)
-                    .Member(o => o.FirstStruct)
-                    .Member(o => o.SecondStruct)))
-                .Builder;
+            _builder = new ComparerBuilder(
+                           config => config.DefineMembersOrder<CycledStruct>(
+                               order => order.Member(o => o.Property)
+                                             .Member(o => o.FirstObject)
+                                             .Member(o => o.SecondObject)))
+                       .For<CycledStructObject>(
+                           config => config.DefineMembersOrder(
+                               order => order.Member(o => o.TextField)
+                                             .Member(o => o.FirstStruct)
+                                             .Member(o => o.SecondStruct)))
+                       .Builder;
         }
 
-        [Fact]
-        public void Sefl_sealed_struct_should_handle_cycle()
-        {
-            var comparer = _builder.GetEqualityComparer<SelfStruct<Guid>>();
-            var x = new SelfStruct<Guid> {
-                Key = Guid.NewGuid(),
-                Value = Guid.NewGuid()
-            };
-
-            using (new AssertionScope()) {
-                comparer.Equals(x, x).Should().BeTrue();
-                comparer.GetHashCode(x).Should().Be(HashCodeCombiner.Combine<object>(x.Key, 1, x.Value));
-            }
-        }
+        private IEqualityComparer<CycledStruct> ComparerStruct => _builder.GetEqualityComparer<CycledStruct>();
+        private IEqualityComparer<CycledStructObject> ComparerObject => _builder.GetEqualityComparer<CycledStructObject>();
 
         [Fact]
         public void Detects_cycle_in_object()
@@ -141,8 +131,19 @@ namespace ILLightenComparer.Tests.EqualityTests.CycleTests
             }
         }
 
-        private readonly IComparerBuilder _builder;
-        private IEqualityComparer<CycledStruct> ComparerStruct => _builder.GetEqualityComparer<CycledStruct>();
-        private IEqualityComparer<CycledStructObject> ComparerObject => _builder.GetEqualityComparer<CycledStructObject>();
+        [Fact]
+        public void Self_sealed_struct_should_handle_cycle()
+        {
+            var comparer = _builder.GetEqualityComparer<SelfStruct<Guid>>();
+            var x = new SelfStruct<Guid> {
+                Key = Guid.NewGuid(),
+                Value = Guid.NewGuid()
+            };
+
+            using (new AssertionScope()) {
+                comparer.Equals(x, x).Should().BeTrue();
+                comparer.GetHashCode(x).Should().Be(HashCodeCombiner.Combine<object>(x.Key, 1, x.Value));
+            }
+        }
     }
 }

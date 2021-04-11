@@ -9,15 +9,6 @@ namespace ILLightenComparer.Equality.Comparisons
 {
     internal sealed class OperatorEqualityComparison : IComparisonEmitter
     {
-        private readonly IVariable _variable;
-        private readonly MethodInfo _equalityMethod;
-
-        private OperatorEqualityComparison(IVariable variable, MethodInfo equalityMethod)
-        {
-            _variable = variable;
-            _equalityMethod = equalityMethod;
-        }
-
         public static OperatorEqualityComparison Create(IVariable variable)
         {
             var variableType = variable.VariableType.GetUnderlyingType();
@@ -28,6 +19,15 @@ namespace ILLightenComparer.Equality.Comparisons
             }
 
             return null;
+        }
+
+        private readonly MethodInfo _equalityMethod;
+        private readonly IVariable _variable;
+
+        private OperatorEqualityComparison(IVariable variable, MethodInfo equalityMethod)
+        {
+            _variable = variable;
+            _equalityMethod = equalityMethod;
         }
 
         public ILEmitter Emit(ILEmitter il, Label _) =>

@@ -6,6 +6,8 @@ namespace ILLightenComparer.Extensions
 {
     internal static class Methods
     {
+        public static readonly ConstructorInfo ArgumentExceptionConstructor = typeof(ArgumentException).GetConstructor(new[] { typeof(string) });
+
         public static TResult InvokeCompare<TContext, TComparable, TResult>(
             this MethodInfo method,
             Type actualType,
@@ -35,7 +37,5 @@ namespace ILLightenComparer.Extensions
 
             return compare(context, x, y, xSet, ySet);
         }
-
-        public static readonly ConstructorInfo ArgumentExceptionConstructor = typeof(ArgumentException).GetConstructor(new[] { typeof(string) });
     }
 }

@@ -4,7 +4,6 @@ using ILLightenComparer.Tests.Comparers;
 
 namespace ILLightenComparer.Benchmarks.Models
 {
-    [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>")]
     public struct LightStruct
     {
         public byte Key;
@@ -14,8 +13,7 @@ namespace ILLightenComparer.Benchmarks.Models
     internal sealed class LightStructComparer : IComparer<LightStruct>
     {
         public static IComparer<LightStruct> Instance { get; } = new LightStructComparer();
-
-        private readonly CollectionComparer<char> _collectionComparer = new CollectionComparer<char>();
+        private readonly CollectionComparer<char> _collectionComparer = new();
 
         public int Compare(LightStruct x, LightStruct y)
         {
@@ -40,8 +38,8 @@ namespace ILLightenComparer.Benchmarks.Models
         {
             var hash = 0x1505L;
             hash = ((hash << 5) + hash) ^ obj.Key;
-            for (int i = 0; i < obj.Value.Length; i++) {
-                hash = ((hash << 5) + hash) ^ obj.Value[i];
+            foreach (var item in obj.Value) {
+                hash = ((hash << 5) + hash) ^ item;
             }
 
             return (int)hash;

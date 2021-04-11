@@ -13,13 +13,24 @@ namespace ILLightenComparer.Equality
 {
     internal sealed class GetHashCodeStaticMethodEmitter : IStaticMethodEmitter
     {
-        private readonly HasherResolver _resolver;
         private static readonly MethodInfo _getHashCodeMethod = typeof(int).GetMethod(nameof(GetHashCode));
-
-        public GetHashCodeStaticMethodEmitter(HasherResolver resolver) => _resolver = resolver;
         static GetHashCodeStaticMethodEmitter() { }
 
-        public void Build(Type objectType, bool detecCycles, MethodBuilder staticMethodBuilder)
+        private static void EmitCycleDetection(ILEmitter il, Type objectType) =>
+            il.Brtrue_S(TryAdd(Arg.CycleSet, Arg.Input, objectType), out var next)
+              .Emit(GetCount(Arg.CycleSet))
+              .Stloc(typeof(int), out var count)
+              .Ret(CallMethod(_getHashCodeMethod, LoadCaller(count)))
+              .MarkLabel(next);
+
+        private readonly HasherResolver _resolver;
+
+        public GetHashCodeStaticMethodEmitter(HasherResolver resolver)
+        {
+            _resolver = resolver;
+        }
+
+        public void Build(Type objectType, bool detectCycles, MethodBuilder staticMethodBuilder)
         {
             using var il = staticMethodBuilder.CreateILEmitter();
 
@@ -33,13 +44,13 @@ namespace ILLightenComparer.Equality
                   .MarkLabel(next);
             }
 
-            if (detecCycles) {
+            if (detectCycles) {
                 EmitCycleDetection(il, objectType);
             }
 
             _resolver.GetHasherEmitter(new ArgumentVariable(objectType)).Emit(il);
 
-            if (detecCycles) {
+            if (detectCycles) {
                 il.Emit(Remove(Arg.CycleSet, Arg.Input, objectType));
             }
 
@@ -47,12 +58,5 @@ namespace ILLightenComparer.Equality
         }
 
         public bool NeedCreateCycleDetectionSets(Type _) => true;
-
-        private static void EmitCycleDetection(ILEmitter il, Type objectType) =>
-            il.Brtrue_S(TryAdd(Arg.CycleSet, Arg.Input, objectType), out var next)
-              .Emit(GetCount(Arg.CycleSet))
-              .Stloc(typeof(int), out var count)
-              .Ret(CallMethod(_getHashCodeMethod, LoadCaller(count)))
-              .MarkLabel(next);
     }
 }

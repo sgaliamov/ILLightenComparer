@@ -7,23 +7,11 @@ namespace ILLightenComparer.Tests.Samples
 {
     public sealed class SampleEqualityChildObject<TMember> : SampleEqualityBaseObject<TMember>, IComparable<SampleEqualityChildObject<TMember>>
     {
-        private readonly static IComparer<TMember> ChildComparer = Helper.DefaultComparer<TMember>();
+        private static readonly IComparer<TMember> ChildComparer = Helper.DefaultComparer<TMember>();
         public static IEqualityComparer<TMember> ChildEqualityComparer = EqualityComparer<TMember>.Default;
 
         public TMember ChildField;
         public TMember ChildProperty { get; set; }
-
-        public override string ToString() => this.ToJson();
-
-        public override bool Equals(object obj) => Equals((SampleEqualityChildObject<TMember>)obj);
-
-        public bool Equals(SampleEqualityChildObject<TMember> other) =>
-            other != null
-            && base.Equals(other)
-            && ChildEqualityComparer.Equals(ChildField, other.ChildField)
-            && ChildEqualityComparer.Equals(ChildProperty, other.ChildProperty);
-
-        public override int GetHashCode() => HashCodeCombiner.Combine(Field, Property, ChildField, ChildProperty);
 
         public int CompareTo(SampleEqualityChildObject<TMember> other)
         {
@@ -49,5 +37,17 @@ namespace ILLightenComparer.Tests.Samples
         }
 
         public override int CompareTo(SampleEqualityBaseObject<TMember> other) => CompareTo((SampleEqualityChildObject<TMember>)other);
+
+        public override bool Equals(object obj) => Equals((SampleEqualityChildObject<TMember>)obj);
+
+        public bool Equals(SampleEqualityChildObject<TMember> other) =>
+            other != null
+            && base.Equals(other)
+            && ChildEqualityComparer.Equals(ChildField, other.ChildField)
+            && ChildEqualityComparer.Equals(ChildProperty, other.ChildProperty);
+
+        public override int GetHashCode() => HashCodeCombiner.Combine(Field, Property, ChildField, ChildProperty);
+
+        public override string ToString() => this.ToJson();
     }
 }

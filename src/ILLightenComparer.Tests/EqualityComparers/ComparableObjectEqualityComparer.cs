@@ -8,7 +8,12 @@ namespace ILLightenComparer.Tests.EqualityComparers
     {
         private readonly IEqualityComparer _memberComparer;
 
-        public ComparableObjectEqualityComparer(IEqualityComparer memberComparer = null) => _memberComparer = memberComparer ?? EqualityComparer<TMember>.Default;
+        public ComparableObjectEqualityComparer(IEqualityComparer memberComparer = null)
+        {
+            _memberComparer = memberComparer ?? EqualityComparer<TMember>.Default;
+        }
+
+        bool IEqualityComparer.Equals(object x, object y) => Equals((ComparableObject<TMember>)x, (ComparableObject<TMember>)y);
 
         public bool Equals(ComparableObject<TMember> x, ComparableObject<TMember> y)
         {
@@ -28,7 +33,7 @@ namespace ILLightenComparer.Tests.EqualityComparers
             return _memberComparer.Equals(x.Property, y.Property);
         }
 
-        bool IEqualityComparer.Equals(object x, object y) => Equals((ComparableObject<TMember>)x, (ComparableObject<TMember>)y);
+        public int GetHashCode(object obj) => GetHashCode((ComparableObject<TMember>)obj);
 
         public int GetHashCode(ComparableObject<TMember> obj)
         {
@@ -45,7 +50,5 @@ namespace ILLightenComparer.Tests.EqualityComparers
             setter?.SetHashSeed(combiner.CombinedHash);
             return combiner.CombineObjects(obj.Property is null ? 0 : _memberComparer.GetHashCode(obj.Property));
         }
-
-        public int GetHashCode(object obj) => GetHashCode((ComparableObject<TMember>)obj);
     }
 }

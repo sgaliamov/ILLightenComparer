@@ -14,27 +14,19 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests
 {
     public sealed class AbstractMembersTests
     {
+        private readonly IEqualityComparer<AbstractMembers> _comparer =
+            new ComparerBuilder()
+                .For<AnotherNestedObject>(c => c.DefineMembersOrder(
+                                              order => order.Member(o => o.Value)
+                                                            .Member(o => o.Key)
+                                                            .Member(o => o.Text)))
+                .For<AbstractMembers>()
+                .GetEqualityComparer();
+
+        private readonly IFixture _fixture = FixtureBuilder.GetInstance();
+
         [Fact]
-        public void Different_sibling_types_are_not_equals()
-        {
-            var sealedNestedObject = _fixture
-                .Build<SealedNestedObject>()
-                .Without(x => x.DeepNestedField)
-                .Without(x => x.DeepNestedProperty)
-                .Create();
-
-            var anotherNestedObject = _fixture.Create<AnotherNestedObject>();
-
-            var one = new AbstractMembers {
-                InterfaceField = sealedNestedObject
-            };
-
-            var another = new AbstractMembers {
-                InterfaceField = anotherNestedObject
-            };
-
-            _comparer.Equals(one, another).Should().BeFalse();
-        }
+        public void Abstract_property_comparison() => TestOneMember(x => new AbstractMembers { AbstractProperty = x }, Constants.SmallCount);
 
         [Fact]
         public void Different_Inherited_types_are_not_equal()
@@ -54,7 +46,26 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests
         }
 
         [Fact]
-        public void Abstract_property_comparison() => TestOneMember(x => new AbstractMembers { AbstractProperty = x }, Constants.SmallCount);
+        public void Different_sibling_types_are_not_equals()
+        {
+            var sealedNestedObject = _fixture
+                                     .Build<SealedNestedObject>()
+                                     .Without(x => x.DeepNestedField)
+                                     .Without(x => x.DeepNestedProperty)
+                                     .Create();
+
+            var anotherNestedObject = _fixture.Create<AnotherNestedObject>();
+
+            var one = new AbstractMembers {
+                InterfaceField = sealedNestedObject
+            };
+
+            var another = new AbstractMembers {
+                InterfaceField = anotherNestedObject
+            };
+
+            _comparer.Equals(one, another).Should().BeFalse();
+        }
 
         [Fact]
         public void Interface_field_comparison() => TestOneMember(x => new AbstractMembers { InterfaceField = x }, Constants.SmallCount);
@@ -95,6 +106,41 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests
             }
         }
 
+        private void TestOneMember(Func<SealedNestedObject, AbstractMembers> selector, int count)
+        {
+            var x = _fixture
+                    .Build<SealedNestedObject>()
+                    .Without(x => x.DeepNestedField)
+                    .Without(x => x.DeepNestedProperty)
+                    .CreateMany(count)
+                    .Select(selector)
+                    .ToArray();
+
+            var y = _fixture
+                    .Build<SealedNestedObject>()
+                    .Without(x => x.DeepNestedField)
+                    .Without(x => x.DeepNestedProperty)
+                    .CreateMany(count)
+                    .Select(selector)
+                    .ToArray();
+
+            for (var i = 0; i < count; i++) {
+                var expectedHashX = x[i].GetHashCode();
+                var expectedHashY = y[i].GetHashCode();
+                var expectedEquals = x[i].Equals(y[i]);
+
+                var hashX = _comparer.GetHashCode(x[i]);
+                var hashY = _comparer.GetHashCode(y[i]);
+                var equals = _comparer.Equals(x[i], y[i]);
+
+                using (new AssertionScope()) {
+                    equals.Should().Be(expectedEquals);
+                    hashX.Should().Be(expectedHashX);
+                    hashY.Should().Be(expectedHashY);
+                }
+            }
+        }
+
         [Fact]
         public void When_left_member_is_null_comparison_produces_false()
         {
@@ -116,53 +162,5 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests
 
             _comparer.Equals(one, another).Should().BeFalse();
         }
-
-        private void TestOneMember(Func<SealedNestedObject, AbstractMembers> selector, int count)
-        {
-            var x = _fixture
-                .Build<SealedNestedObject>()
-                .Without(x => x.DeepNestedField)
-                .Without(x => x.DeepNestedProperty)
-                .CreateMany(count)
-                .Select(selector)
-                .ToArray();
-
-            var y = _fixture
-               .Build<SealedNestedObject>()
-               .Without(x => x.DeepNestedField)
-               .Without(x => x.DeepNestedProperty)
-               .CreateMany(count)
-               .Select(selector)
-               .ToArray();
-
-            for (int i = 0; i < count; i++) {
-                var expectedHashX = x[i].GetHashCode();
-                var expectedHashY = y[i].GetHashCode();
-                var expectedEquals = x[i].Equals(y[i]);
-
-                var hashX = _comparer.GetHashCode(x[i]);
-                var hashY = _comparer.GetHashCode(y[i]);
-                var equals = _comparer.Equals(x[i], y[i]);
-
-                using (new AssertionScope()) {
-                    equals.Should().Be(expectedEquals);
-                    hashX.Should().Be(expectedHashX);
-                    hashY.Should().Be(expectedHashY);
-                }
-            }
-        }
-
-        private readonly IFixture _fixture = FixtureBuilder.GetInstance();
-
-        private readonly IEqualityComparer<AbstractMembers> _comparer =
-            new ComparerBuilder()
-                .For<AnotherNestedObject>(c => c
-                    .DefineMembersOrder(order =>
-                        order.Member(o => o.Value)
-                             .Member(o => o.Key)
-                             .Member(o => o.Text))
-                )
-                .For<AbstractMembers>()
-                .GetEqualityComparer();
     }
 }

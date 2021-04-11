@@ -16,16 +16,35 @@ namespace ILLightenComparer.Shared.Comparisons
 {
     internal sealed class EnumerablesComparison : IComparisonEmitter
     {
+        public static EnumerablesComparison Create(
+            IResolver comparisons,
+            ArrayComparisonEmitter arrayComparisonEmitter,
+            EmitCheckIfLoopsAreDoneDelegate emitCheckIfLoopsAreDone,
+            IConfigurationProvider configuration,
+            IVariable variable)
+        {
+            var variableType = variable.VariableType;
+            if (variableType.ImplementsGenericInterface(typeof(IEnumerable<>)) && !variableType.IsArray) {
+                return new EnumerablesComparison(comparisons, arrayComparisonEmitter, emitCheckIfLoopsAreDone, configuration, variable);
+            }
+
+            return null;
+        }
+
+        private static void EmitDisposeEnumerators(ILEmitter il, LocalBuilder xEnumerator, LocalBuilder yEnumerator) =>
+            il.EmitDispose(xEnumerator)
+              .EmitDispose(yEnumerator);
+
+        private readonly ArrayComparisonEmitter _arrayComparisonEmitter;
+        private readonly IConfigurationProvider _configuration;
         private readonly Type _elementType;
+        private readonly EmitCheckIfLoopsAreDoneDelegate _emitCheckIfLoopsAreDone;
         private readonly Type _enumeratorType;
-        private readonly MethodInfo _moveNextMethod;
         private readonly MethodInfo _getCurrentMethod;
         private readonly MethodInfo _getEnumeratorMethod;
-        private readonly ArrayComparisonEmitter _arrayComparisonEmitter;
-        private readonly IVariable _variable;
-        private readonly IConfigurationProvider _configuration;
+        private readonly MethodInfo _moveNextMethod;
         private readonly IResolver _resolver;
-        private readonly EmitCheckIfLoopsAreDoneDelegate _emitCheckIfLoopsAreDone;
+        private readonly IVariable _variable;
 
         private EnumerablesComparison(
             IResolver resolver,
@@ -43,29 +62,14 @@ namespace ILLightenComparer.Shared.Comparisons
             var variableType = variable.VariableType;
 
             _elementType = variableType
-                .FindGenericInterface(typeof(IEnumerable<>))
-                .GetGenericArguments()
-                .Single();
+                           .FindGenericInterface(typeof(IEnumerable<>))
+                           .GetGenericArguments()
+                           .Single();
 
             _getEnumeratorMethod = variableType.FindMethod(nameof(IEnumerable.GetEnumerator), Type.EmptyTypes);
             _enumeratorType = _getEnumeratorMethod.ReturnType;
             _moveNextMethod = _enumeratorType.FindMethod(nameof(IEnumerator.MoveNext), Type.EmptyTypes);
             _getCurrentMethod = _enumeratorType.GetPropertyGetter(nameof(IEnumerator.Current));
-        }
-
-        public static EnumerablesComparison Create(
-            IResolver comparisons,
-            ArrayComparisonEmitter arrayComparisonEmitter,
-            EmitCheckIfLoopsAreDoneDelegate emitCheckIfLoopsAreDone,
-            IConfigurationProvider configuration,
-            IVariable variable)
-        {
-            var variableType = variable.VariableType;
-            if (variableType.ImplementsGenericInterface(typeof(IEnumerable<>)) && !variableType.IsArray) {
-                return new EnumerablesComparison(comparisons, arrayComparisonEmitter, emitCheckIfLoopsAreDone, configuration, variable);
-            }
-
-            return null;
         }
 
         public ILEmitter Emit(ILEmitter il, Label gotoNext)
@@ -116,6 +120,19 @@ namespace ILLightenComparer.Shared.Comparisons
             return (xEnumerator, yEnumerator);
         }
 
+        private (LocalBuilder xDone, LocalBuilder yDone) EmitMoveNext(LocalBuilder xEnumerator, LocalBuilder yEnumerator, ILEmitter il)
+        {
+            // todo: 3. it's possible to use "not done" flag. it will simplify emitted code in _emitCheckIfLoopsAreDone.
+            il.Ceq(CallMethod(_moveNextMethod, LoadCaller(xEnumerator)),
+                   Ldc_I4(0),
+                   out var xDone)
+              .Ceq(CallMethod(_moveNextMethod, LoadCaller(yEnumerator)),
+                   Ldc_I4(0),
+                   out var yDone);
+
+            return (xDone, yDone);
+        }
+
         private void Loop(ILEmitter il, LocalBuilder xEnumerator, LocalBuilder yEnumerator, Label exitLoop)
         {
             il.DefineLabel(out var loopStart);
@@ -140,22 +157,5 @@ namespace ILLightenComparer.Shared.Comparisons
                   .Emit(itemComparison.EmitCheckForResult(loopStart));
             }
         }
-
-        private (LocalBuilder xDone, LocalBuilder yDone) EmitMoveNext(LocalBuilder xEnumerator, LocalBuilder yEnumerator, ILEmitter il)
-        {
-            // todo: 3. it's possible to use "not done" flag. it will simplify emitted code in _emitCheckIfLoopsAreDone.
-            il.Ceq(CallMethod(_moveNextMethod, LoadCaller(xEnumerator)),
-                  Ldc_I4(0),
-                  out var xDone)
-              .Ceq(CallMethod(_moveNextMethod, LoadCaller(yEnumerator)),
-                  Ldc_I4(0),
-                  out var yDone);
-
-            return (xDone, yDone);
-        }
-
-        private static void EmitDisposeEnumerators(ILEmitter il, LocalBuilder xEnumerator, LocalBuilder yEnumerator) => il
-            .EmitDispose(xEnumerator)
-            .EmitDispose(yEnumerator);
     }
 }

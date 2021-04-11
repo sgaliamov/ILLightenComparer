@@ -6,6 +6,8 @@ namespace ILLightenComparer.Tests
 {
     public sealed class ComparersBuilderTests
     {
+        private readonly IComparerBuilder _builder = new ComparerBuilder(config => config.SetDefaultFieldsInclusion(false));
+
         [Fact]
         public void Create_generic_comparer()
         {
@@ -21,7 +23,5 @@ namespace ILLightenComparer.Tests
 
             comparer.Should().NotBeNull();
         }
-
-        private readonly IComparerBuilder _builder = new ComparerBuilder(config => config.SetDefaultFieldsInclusion(false));
     }
 }

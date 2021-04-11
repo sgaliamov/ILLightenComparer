@@ -15,25 +15,17 @@ namespace ILLightenComparer.Tests.ComparerTests
     internal sealed class GenericTests
     {
         private static readonly IFixture Fixture = FixtureBuilder.GetInstance();
-        private readonly IComparerBuilder _comparerBuilder;
 
-        public GenericTests(IComparerBuilder comparerBuilder = null) => _comparerBuilder = comparerBuilder;
-
-        public void GenericTest(Type type, IComparer referenceComparer, bool sort, int times, int count = Constants.BigCount)
-        {
-            var method = type.GetOrAddProperty($"Comparer_{nameof(GenericTest)}", () => GetTestMethod(type));
-            var builder = _comparerBuilder ?? new ComparerBuilder();
-            builder.Configure(c => c.SetDefaultCollectionsOrderIgnoring(sort));
-            method.Invoke(null, new object[] { builder, referenceComparer, times, count });
-        }
-
-        private static MethodInfo GetTestMethod(Type objType) => typeof(GenericTests)
-            .GetGenericMethod(nameof(Test), BindingFlags.Static | BindingFlags.NonPublic)
-            .MakeGenericMethod(objType);
+        private static MethodInfo GetTestMethod(Type objType) =>
+            typeof(GenericTests)
+                .GetGenericMethod(nameof(Test), BindingFlags.Static | BindingFlags.NonPublic)
+                .MakeGenericMethod(objType);
 
         private static void Test<T>(IComparerProvider comparersBuilder, IComparer<T> referenceComparer, int times, int count)
         {
-            if (referenceComparer == null) { referenceComparer = Helper.DefaultComparer<T>(); }
+            if (referenceComparer == null) {
+                referenceComparer = Helper.DefaultComparer<T>();
+            }
 
             var typedComparer = comparersBuilder.GetComparer<T>();
 
@@ -114,9 +106,13 @@ namespace ILLightenComparer.Tests.ComparerTests
 
         private static void Mutate_class_members_and_test_comparison<T>(IComparer<T> referenceComparer, IComparer<T> typedComparer)
         {
-            if (typeof(T).IsValueType) { return; }
+            if (typeof(T).IsValueType) {
+                return;
+            }
 
-            if (typeof(T).GetGenericInterface(typeof(IEnumerable<>)) != null) { return; }
+            if (typeof(T).GetGenericInterface(typeof(IEnumerable<>)) != null) {
+                return;
+            }
 
             var original = Fixture.Create<T>();
             foreach (var mutant in Fixture.CreateMutants(original)) {
@@ -207,8 +203,9 @@ namespace ILLightenComparer.Tests.ComparerTests
             var list = Activator.CreateInstance(listType);
             var addMethod = listType.GetMethod(nameof(List<object>.Add), new[] { elementType });
             var asEnumerableMethod = typeof(Enumerable)
-                .GetGenericMethod(nameof(Enumerable.AsEnumerable), BindingFlags.Static | BindingFlags.Public)
-                .MakeGenericMethod(elementType);
+                                     .GetGenericMethod(nameof(Enumerable.AsEnumerable),
+                                                       BindingFlags.Static | BindingFlags.Public)
+                                     .MakeGenericMethod(elementType);
 
             foreach (var item in (IEnumerable)result) {
                 var parameters = ThreadSafeRandom.NextDouble() < Constants.NullProbability
@@ -226,6 +223,21 @@ namespace ILLightenComparer.Tests.ComparerTests
             for (var j = 0; j < count; j++) {
                 yield return Create<T>();
             }
+        }
+
+        private readonly IComparerBuilder _comparerBuilder;
+
+        public GenericTests(IComparerBuilder comparerBuilder = null)
+        {
+            _comparerBuilder = comparerBuilder;
+        }
+
+        public void GenericTest(Type type, IComparer referenceComparer, bool sort, int times, int count = Constants.BigCount)
+        {
+            var method = type.GetOrAddProperty($"Comparer_{nameof(GenericTest)}", () => GetTestMethod(type));
+            var builder = _comparerBuilder ?? new ComparerBuilder();
+            builder.Configure(c => c.SetDefaultCollectionsOrderIgnoring(sort));
+            method.Invoke(null, new object[] { builder, referenceComparer, times, count });
         }
     }
 }

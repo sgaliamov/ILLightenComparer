@@ -7,7 +7,10 @@ namespace ILLightenComparer.Tests.EqualityComparers
     {
         private readonly IEqualityComparer<TValue> _valueComparer;
 
-        public NullableEqualityComparer(IEqualityComparer<TValue> valueComparer = null) => _valueComparer = valueComparer ?? EqualityComparer<TValue>.Default;
+        public NullableEqualityComparer(IEqualityComparer<TValue> valueComparer = null)
+        {
+            _valueComparer = valueComparer ?? EqualityComparer<TValue>.Default;
+        }
 
         bool IEqualityComparer.Equals(object x, object y) => Equals((TValue?)x, (TValue?)y);
 

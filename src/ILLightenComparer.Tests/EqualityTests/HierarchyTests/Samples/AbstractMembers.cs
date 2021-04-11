@@ -13,14 +13,12 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests.Samples
 
         public override bool Equals(object obj) => Equals((AbstractMembers)obj);
 
-        public bool Equals(AbstractMembers other)
-        {
-            return other != null
-                && (InterfaceField?.Equals(other.InterfaceField) ?? other.InterfaceField is null)
-                && (ObjectField?.Equals(other.ObjectField) ?? other.ObjectField is null)
-                && (AbstractProperty?.Equals((object)other.AbstractProperty) ?? other.AbstractProperty is null)
-                && (NotSealedProperty?.Equals((object)other.NotSealedProperty) ?? other.NotSealedProperty is null);
-        }
+        public bool Equals(AbstractMembers other) =>
+            other != null
+            && (InterfaceField?.Equals(other.InterfaceField) ?? other.InterfaceField is null)
+            && (ObjectField?.Equals(other.ObjectField) ?? other.ObjectField is null)
+            && (AbstractProperty?.Equals((object)other.AbstractProperty) ?? other.AbstractProperty is null)
+            && (NotSealedProperty?.Equals((object)other.NotSealedProperty) ?? other.NotSealedProperty is null);
 
         public override int GetHashCode() => HashCodeCombiner.Combine(InterfaceField, ObjectField, AbstractProperty, NotSealedProperty);
     }

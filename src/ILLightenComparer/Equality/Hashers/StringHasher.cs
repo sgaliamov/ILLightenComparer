@@ -3,10 +3,10 @@ using System.Reflection;
 using System.Reflection.Emit;
 using ILLightenComparer.Abstractions;
 using ILLightenComparer.Config;
+using ILLightenComparer.Extensions;
 using ILLightenComparer.Variables;
 using Illuminator;
 using static Illuminator.Functions;
-using ILLightenComparer.Extensions;
 
 namespace ILLightenComparer.Equality.Hashers
 {
@@ -15,15 +15,6 @@ namespace ILLightenComparer.Equality.Hashers
         private static readonly MethodInfo GetHashCodeMethod = typeof(string).GetMethod(
             nameof(string.GetHashCode),
             new[] { typeof(StringComparison) });
-
-        private readonly IVariable _variable;
-        private readonly int _stringComparison;
-
-        private StringHasher(StringComparison stringComparison, IVariable variable)
-        {
-            _variable = variable;
-            _stringComparison = (int)stringComparison;
-        }
 
         public static StringHasher Create(IConfigurationProvider configuration, IVariable variable)
         {
@@ -35,13 +26,23 @@ namespace ILLightenComparer.Equality.Hashers
             return null;
         }
 
+        private readonly int _stringComparison;
+
+        private readonly IVariable _variable;
+
+        private StringHasher(StringComparison stringComparison, IVariable variable)
+        {
+            _variable = variable;
+            _stringComparison = (int)stringComparison;
+        }
+
         public ILEmitter Emit(ILEmitter il) =>
             _variable.Load(il, Arg.Input)
                      .Stloc(typeof(string), out var local)
                      .Brfalse_S(Ldloc(local), out var zero)
                      .CallMethod(
-                         GetHashCodeMethod, 
-                         Ldloc(local), 
+                         GetHashCodeMethod,
+                         Ldloc(local),
                          Ldc_I4(_stringComparison))
                      .Br_S(out var next)
                      .MarkLabel(zero)

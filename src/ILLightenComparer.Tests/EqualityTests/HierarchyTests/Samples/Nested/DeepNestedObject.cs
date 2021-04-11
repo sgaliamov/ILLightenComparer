@@ -9,12 +9,10 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests.Samples.Nested
 
         public override bool Equals(object obj) => Equals((DeepNestedObject)obj);
 
-        public bool Equals(DeepNestedObject other)
-        {
-            return other != null
-                && FloatField == other.FloatField
-                && FloatProperty == other.FloatProperty;
-        }
+        public bool Equals(DeepNestedObject other) =>
+            other != null
+            && FloatField == other.FloatField
+            && FloatProperty == other.FloatProperty;
 
         public override int GetHashCode() => HashCodeCombiner.Combine(FloatField, FloatProperty);
     }

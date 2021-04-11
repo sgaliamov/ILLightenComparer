@@ -16,6 +16,33 @@ namespace ILLightenComparer.Shared
     internal sealed class GenericTypeBuilder
     {
         private static readonly Type ContextType = typeof(IContext);
+
+        private static void BuildConstructorAndFactoryMethod(TypeBuilder typeBuilder, FieldInfo contextField)
+        {
+            var parameters = new[] { typeof(IContext) };
+
+            var constructorInfo = typeBuilder.DefineConstructor(
+                MethodAttributes.Public,
+                CallingConventions.HasThis,
+                parameters);
+
+            using (var il = constructorInfo.CreateILEmitter()) {
+                il.LoadArgument(Arg.This)
+                  .Call(typeof(object).GetConstructor(Type.EmptyTypes))
+                  .Stfld(LoadArgument(Arg.This), LoadArgument(1), contextField)
+                  .Ret();
+            }
+
+            var methodBuilder = typeBuilder.DefineStaticMethod(
+                nameof(TypeExtensions.CreateInstance),
+                typeBuilder,
+                parameters);
+
+            using (var il = methodBuilder.CreateILEmitter()) {
+                il.Newobj(constructorInfo, LoadArgument(Arg.This)).Ret();
+            }
+        }
+
         private readonly IConfigurationProvider _configuration;
         private readonly IReadOnlyDictionary<string, IStaticMethodEmitter> _methodEmitter;
 
@@ -63,12 +90,6 @@ namespace ILLightenComparer.Shared
             return compiledComparerType;
         }
 
-        private void BuildStaticMethod(Type objectType, MethodBuilder staticMethodBuilder)
-        {
-            var detectCycles = NeedDetectCycles(objectType, staticMethodBuilder.Name);
-            _methodEmitter[staticMethodBuilder.Name].Build(objectType, detectCycles, staticMethodBuilder);
-        }
-
         private void BuildInstanceMethod(
             Type typedComparerInterface,
             TypeBuilder typeBuilder,
@@ -90,14 +111,20 @@ namespace ILLightenComparer.Shared
             EmitStaticMethodCall(il, objectType, staticMethod, parametersCount);
         }
 
+        private void BuildStaticMethod(Type objectType, MethodBuilder staticMethodBuilder)
+        {
+            var detectCycles = NeedDetectCycles(objectType, staticMethodBuilder.Name);
+            _methodEmitter[staticMethodBuilder.Name].Build(objectType, detectCycles, staticMethodBuilder);
+        }
+
         private void EmitStaticMethodCall(ILEmitter il, Type objectType, MethodBuilder staticMethod, int parametersCount)
         {
             var createCycleDetectionSets = NeedCreateCycleDetectionSets(objectType, staticMethod.Name);
 
             Enumerable.Range(0, parametersCount)
                       .Aggregate(il, (emitter, _) => createCycleDetectionSets
-                          ? emitter.Newobj(CycleDetectionSet.DefaultConstructor)
-                          : emitter.Ldnull())
+                                     ? emitter.Newobj(CycleDetectionSet.DefaultConstructor)
+                                     : emitter.Ldnull())
                       .CallMethod(staticMethod)
                       .Ret();
         }
@@ -112,31 +139,5 @@ namespace ILLightenComparer.Shared
             && NeedCreateCycleDetectionSets(objectType, methodName)
             && !objectType.IsNullable()
             && !objectType.ImplementsGenericInterface(typeof(IEnumerable<>));
-
-        private static void BuildConstructorAndFactoryMethod(TypeBuilder typeBuilder, FieldInfo contextField)
-        {
-            var parameters = new[] { typeof(IContext) };
-
-            var constructorInfo = typeBuilder.DefineConstructor(
-                MethodAttributes.Public,
-                CallingConventions.HasThis,
-                parameters);
-
-            using (var il = constructorInfo.CreateILEmitter()) {
-                il.LoadArgument(Arg.This)
-                  .Call(typeof(object).GetConstructor(Type.EmptyTypes))
-                  .Stfld(LoadArgument(Arg.This), LoadArgument(1), contextField)
-                  .Ret();
-            }
-
-            var methodBuilder = typeBuilder.DefineStaticMethod(
-                nameof(TypeExtensions.CreateInstance),
-                typeBuilder,
-                parameters);
-
-            using (var il = methodBuilder.CreateILEmitter()) {
-                il.Newobj(constructorInfo, LoadArgument(Arg.This)).Ret();
-            }
-        }
     }
 }

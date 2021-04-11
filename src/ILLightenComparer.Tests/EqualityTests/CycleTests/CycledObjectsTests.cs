@@ -12,25 +12,19 @@ namespace ILLightenComparer.Tests.EqualityTests.CycleTests
 {
     public sealed class CycledObjectsTests
     {
+        private readonly IComparerBuilder _builder = new ComparerBuilder();
+
+        private readonly Fixture _fixture;
+
         public CycledObjectsTests()
         {
             _fixture = new Fixture();
             _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
         }
 
-        [Fact]
-        public void Hasing_should_fail_because_of_generating_comparers_for_two_dependent_classes()
-        {
-            var one = _fixture.Create<OneSealed>();
-            var other = _fixture.Create<OneSealed>();
-            one.Two.Three.One = one;
-            other.Two.Three.One = one;
-
-            using (new AssertionScope()) {
-                ComparerForOneSealed.Equals(one, other).Should().BeFalse();
-                ComparerForOneSealed.GetHashCode(one).Should().NotBe(ComparerForOneSealed.GetHashCode(other));
-            }
-        }
+        private IEqualityComparer<SelfSealed> ComparerSelfSealed => _builder.For<SelfSealed>().GetEqualityComparer();
+        private IEqualityComparer<SelfOpened> ComparerSelfOpened => _builder.For<SelfOpened>().GetEqualityComparer();
+        private IEqualityComparer<OneSealed> ComparerForOneSealed => _builder.For<OneSealed>().GetEqualityComparer();
 
         [Fact]
         public void Comparison_with_cycle_on_types_level_only()
@@ -89,6 +83,51 @@ namespace ILLightenComparer.Tests.EqualityTests.CycleTests
         }
 
         [Fact]
+        public void Detects_cycle_handles_equalty_by_value()
+        {
+            var one = new SelfSealed { Value = 1 };
+            one.Second = new SelfSealed {
+                First = one,
+                Value = 1
+            };
+            /*
+                  1-1
+                 / \
+                N   2-1
+            cycle: / \
+                  1-1 N
+                 / \ 
+                N   2-1
+            */
+
+            var other = new SelfSealed {
+                Second = new SelfSealed {
+                    First = new SelfSealed {
+                        Second = new SelfSealed { Value = 0 },
+                        Value = 4
+                    },
+                    Value = 4
+                },
+                Value = 3
+            };
+            /*
+                  3-3
+                 / \
+                N   4-4
+                   / \
+                  5-4 N
+                 / \
+                N   6-6
+            */
+
+            using (new AssertionScope()) {
+                ComparerSelfSealed.GetHashCode(one).Should().Be(-2015758974);
+                ComparerSelfSealed.GetHashCode(other).Should().Be(-1064642813);
+                ComparerSelfSealed.Equals(one, other).Should().BeFalse();
+            }
+        }
+
+        [Fact]
         public void Detects_cycle_on_second_member()
         {
             var one = new SelfSealed { Value = 1 };
@@ -127,6 +166,20 @@ namespace ILLightenComparer.Tests.EqualityTests.CycleTests
                 ComparerSelfSealed.GetHashCode(one).Should().Be(-2015759071);
                 ComparerSelfSealed.GetHashCode(other).Should().Be(-1670556025);
                 ComparerSelfSealed.Equals(one, other).Should().BeFalse();
+            }
+        }
+
+        [Fact]
+        public void Hasing_should_fail_because_of_generating_comparers_for_two_dependent_classes()
+        {
+            var one = _fixture.Create<OneSealed>();
+            var other = _fixture.Create<OneSealed>();
+            one.Two.Three.One = one;
+            other.Two.Three.One = one;
+
+            using (new AssertionScope()) {
+                ComparerForOneSealed.Equals(one, other).Should().BeFalse();
+                ComparerForOneSealed.GetHashCode(one).Should().NotBe(ComparerForOneSealed.GetHashCode(other));
             }
         }
 
@@ -170,51 +223,6 @@ namespace ILLightenComparer.Tests.EqualityTests.CycleTests
                 comparer.Equals(x, y).Should().BeFalse();
                 comparer.GetHashCode(x).Should().Be(271135911);
                 comparer.GetHashCode(y).Should().Be(194708355);
-            }
-        }
-
-        [Fact]
-        public void Detects_cycle_handles_equalty_by_value()
-        {
-            var one = new SelfSealed { Value = 1 };
-            one.Second = new SelfSealed {
-                First = one,
-                Value = 1
-            };
-            /*
-                  1-1
-                 / \
-                N   2-1
-            cycle: / \
-                  1-1 N
-                 / \ 
-                N   2-1
-            */
-
-            var other = new SelfSealed {
-                Second = new SelfSealed {
-                    First = new SelfSealed {
-                        Second = new SelfSealed { Value = 0 },
-                        Value = 4
-                    },
-                    Value = 4
-                },
-                Value = 3
-            };
-            /*
-                  3-3
-                 / \
-                N   4-4
-                   / \
-                  5-4 N
-                 / \
-                N   6-6
-            */
-
-            using (new AssertionScope()) {
-                ComparerSelfSealed.GetHashCode(one).Should().Be(-2015758974);
-                ComparerSelfSealed.GetHashCode(other).Should().Be(-1064642813);
-                ComparerSelfSealed.Equals(one, other).Should().BeFalse();
             }
         }
 
@@ -277,12 +285,5 @@ namespace ILLightenComparer.Tests.EqualityTests.CycleTests
                 comparer.GetHashCode(x).Should().NotBe(comparer.GetHashCode(y));
             }
         }
-
-        private readonly Fixture _fixture;
-        private readonly IComparerBuilder _builder = new ComparerBuilder();
-
-        private IEqualityComparer<SelfSealed> ComparerSelfSealed => _builder.For<SelfSealed>().GetEqualityComparer();
-        private IEqualityComparer<SelfOpened> ComparerSelfOpened => _builder.For<SelfOpened>().GetEqualityComparer();
-        private IEqualityComparer<OneSealed> ComparerForOneSealed => _builder.For<OneSealed>().GetEqualityComparer();
     }
 }

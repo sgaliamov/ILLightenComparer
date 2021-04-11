@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using ILLightenComparer.Abstractions;
 using ILLightenComparer.Config;
 using ILLightenComparer.Equality.Comparisons;
+using ILLightenComparer.Extensions;
 using ILLightenComparer.Shared;
 using ILLightenComparer.Shared.Comparisons;
 using ILLightenComparer.Variables;
-using Illuminator;
-using ILLightenComparer.Extensions;
 
 namespace ILLightenComparer.Equality
 {
@@ -36,23 +34,21 @@ namespace ILLightenComparer.Equality
             var collectionComparer = new ArrayComparisonEmitter(this, CustomEmitters.EmitCheckIfLoopsAreDone, CustomEmitters.EmitReferenceComparison);
 
             _comparisonFactories = new Func<IVariable, IComparisonEmitter>[] {
-                (IVariable variable) => NullableComparison.Create(this, CustomEmitters.EmitReturnIfFalsy, CustomEmitters.EmitCheckNullablesForValue, variable),
+                variable => NullableComparison.Create(this, CustomEmitters.EmitReturnIfFalsy, CustomEmitters.EmitCheckNullablesForValue, variable),
                 CeqEqualityComparison.Create,
-                (IVariable variable) => StringsComparison.Create(StringEqualsMethod, CustomEmitters.EmitReturnIfFalsy, _configuration, variable),
+                variable => StringsComparison.Create(StringEqualsMethod, CustomEmitters.EmitReturnIfFalsy, _configuration, variable),
                 OperatorEqualityComparison.Create,
                 BacisEqualityComparison.Create,
-                (IVariable variable) => MembersComparison.Create(this, membersProvider, variable),
-                (IVariable variable) => ArraysComparison.Create(collectionComparer, _configuration, variable),
-                (IVariable variable) => EnumerablesComparison.Create(this, collectionComparer, CustomEmitters.EmitCheckIfLoopsAreDone, _configuration, variable),
-                (IVariable variable) => IndirectComparison.Create(
+                variable => MembersComparison.Create(this, membersProvider, variable),
+                variable => ArraysComparison.Create(collectionComparer, _configuration, variable),
+                variable => EnumerablesComparison.Create(this, collectionComparer, CustomEmitters.EmitCheckIfLoopsAreDone, _configuration, variable),
+                variable => IndirectComparison.Create(
                     CustomEmitters.EmitReturnIfFalsy,
-                    variableType => context.GetStaticEqualsMethodInfo(variableType),
+                    context.GetStaticEqualsMethodInfo,
                     DelayedEquals,
                     variable)
             };
         }
-
-        public void EmitCheckForIntermediateResult(ILEmitter il, Label next) => il.Brtrue(next).Ret(0);
 
         public IComparisonEmitter GetComparisonEmitter(IVariable variable)
         {
@@ -62,8 +58,8 @@ namespace ILLightenComparer.Equality
             }
 
             var comparison = _comparisonFactories
-                .Select(factory => factory(variable))
-                .FirstOrDefault(x => x != null);
+                             .Select(factory => factory(variable))
+                             .FirstOrDefault(x => x != null);
 
             if (comparison == null) {
                 throw new NotSupportedException($"{variable.VariableType.DisplayName()} is not supported.");

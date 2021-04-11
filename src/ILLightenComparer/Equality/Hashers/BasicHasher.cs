@@ -9,15 +9,6 @@ namespace ILLightenComparer.Equality.Hashers
 {
     internal sealed class BasicHasher : IHasherEmitter
     {
-        private readonly IVariable _variable;
-        private readonly MethodInfo _getHashMethod;
-
-        private BasicHasher(IVariable variable)
-        {
-            _variable = variable;
-            _getHashMethod = _variable.VariableType.GetUnderlyingType().GetMethod(nameof(GetHashCode));
-        }
-
         public static BasicHasher Create(IVariable variable)
         {
             if (variable.VariableType.GetUnderlyingType().IsBasic()) {
@@ -27,11 +18,20 @@ namespace ILLightenComparer.Equality.Hashers
             return null;
         }
 
+        private readonly MethodInfo _getHashMethod;
+        private readonly IVariable _variable;
+
+        private BasicHasher(IVariable variable)
+        {
+            _variable = variable;
+            _getHashMethod = _variable.VariableType.GetUnderlyingType().GetMethod(nameof(GetHashCode));
+        }
+
         public ILEmitter Emit(ILEmitter il) =>
             il.CallMethod(
                 _getHashMethod,
-                _variable.VariableType.IsValueType 
-                    ? _variable.LoadAddress(Arg.Input) 
+                _variable.VariableType.IsValueType
+                    ? _variable.LoadAddress(Arg.Input)
                     : _variable.Load(Arg.Input));
 
         public ILEmitter Emit(ILEmitter il, LocalBuilder _) => Emit(il);

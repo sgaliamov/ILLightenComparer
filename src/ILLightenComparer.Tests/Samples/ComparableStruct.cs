@@ -11,6 +11,7 @@ namespace ILLightenComparer.Tests.Samples
     {
         [SuppressMessage("Design", "RCS1158:Static member in generic type should use a type parameter.", Justification = "Test class")]
         public static bool UsedCompareTo;
+
         public static IComparer<TMember> Comparer = Helper.DefaultComparer<TMember>();
 
         public TMember Field;

@@ -5,13 +5,15 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests.Samples
 {
     public sealed class CycledStructObject
     {
+        public static IComparer<CycledStructObject> Comparer { get; } = new RelationalComparer();
         public readonly int Id;
         public CycledStruct? FirstStruct;
         public string TextField;
 
-        public CycledStructObject() => Id = this.GetObjectId();
-
-        public static IComparer<CycledStructObject> Comparer { get; } = new RelationalComparer();
+        public CycledStructObject()
+        {
+            Id = this.GetObjectId();
+        }
 
         public CycledStruct SecondStruct { get; set; }
 
@@ -19,14 +21,6 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests.Samples
 
         public sealed class RelationalComparer : IComparer<CycledStructObject>
         {
-            public int Compare(CycledStructObject x, CycledStructObject y)
-            {
-                var setX = new CycleDetectionSet();
-                var setY = new CycleDetectionSet();
-
-                return Compare(x, y, setX, setY);
-            }
-
             public static int Compare(
                 CycledStructObject x,
                 CycledStructObject y,
@@ -61,6 +55,14 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests.Samples
                 }
 
                 return CycledStruct.RelationalComparer.Compare(x.SecondStruct, y.SecondStruct, setX, setY);
+            }
+
+            public int Compare(CycledStructObject x, CycledStructObject y)
+            {
+                var setX = new CycleDetectionSet();
+                var setY = new CycleDetectionSet();
+
+                return Compare(x, y, setX, setY);
             }
         }
     }

@@ -8,10 +8,6 @@ namespace ILLightenComparer.Equality.Comparisons
 {
     internal sealed class CeqEqualityComparison : IComparisonEmitter
     {
-        private readonly IVariable _variable;
-
-        private CeqEqualityComparison(IVariable variable) => _variable = variable;
-
         public static CeqEqualityComparison Create(IVariable variable)
         {
             if (variable.VariableType.GetUnderlyingType().IsCeqCompatible()) {
@@ -19,6 +15,13 @@ namespace ILLightenComparer.Equality.Comparisons
             }
 
             return null;
+        }
+
+        private readonly IVariable _variable;
+
+        private CeqEqualityComparison(IVariable variable)
+        {
+            _variable = variable;
         }
 
         public ILEmitter Emit(ILEmitter il, Label _) => il.Ceq(_variable.Load(Arg.X), _variable.Load(Arg.Y));

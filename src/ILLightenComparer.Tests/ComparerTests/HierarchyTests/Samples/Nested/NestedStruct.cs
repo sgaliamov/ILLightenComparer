@@ -8,7 +8,7 @@ namespace ILLightenComparer.Tests.ComparerTests.HierarchyTests.Samples.Nested
         public ulong Property { get; set; }
         public ulong? NullableProperty { get; set; }
 
-        public static RelationalComparer Comparer { get; } = new RelationalComparer();
+        public static RelationalComparer Comparer { get; } = new();
 
         public sealed class RelationalComparer : IComparer<NestedStruct>
         {

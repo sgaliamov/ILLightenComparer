@@ -1,20 +1,28 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using ILLightenComparer.Tests.Utilities;
 
 namespace ILLightenComparer.Tests.EqualityComparers
 {
-    [System.Diagnostics.DebuggerDisplay("{_combinedHash64}")]
+    [DebuggerDisplay("{_combinedHash64}")]
     internal sealed class HashCodeCombiner
     {
         public const long Seed = 0x1505L;
 
-        public static HashCodeCombiner Start(long seed = Seed) => new HashCodeCombiner(seed);
+        public static HashCodeCombiner Start(long seed = Seed) => new(seed);
 
         public static HashCodeCombiner Combine<TItem>(params TItem[] objects) => Start().Combine(null, objects.UnfoldArrays());
 
         public static implicit operator int(HashCodeCombiner self) => self.CombinedHash;
 
-        public int CombinedHash { get { return (int)_combinedHash64; } }
+        private long _combinedHash64;
+
+        private HashCodeCombiner(long seed)
+        {
+            _combinedHash64 = seed;
+        }
+
+        public int CombinedHash => (int)_combinedHash64;
 
         public HashCodeCombiner Combine<TItem>(IEqualityComparer<TItem> itemComparer, TItem[] objects)
         {
@@ -28,9 +36,5 @@ namespace ILLightenComparer.Tests.EqualityComparers
         }
 
         public HashCodeCombiner CombineObjects<TItem>(params TItem[] objects) => Combine<TItem>(null, objects.UnfoldArrays());
-
-        private long _combinedHash64;
-
-        private HashCodeCombiner(long seed) => _combinedHash64 = seed;
     }
 }

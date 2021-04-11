@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using AutoFixture;
 using BenchmarkDotNet.Attributes;
 using ILLightenComparer.Tests.Utilities;
@@ -20,7 +19,7 @@ namespace ILLightenComparer.Benchmarks.Benchmark.EqualityComparer
         private readonly T[] _one = new T[N];
         private readonly T[] _other = new T[N];
 
-        [SuppressMessage("CodeQuality", "IDE0052:Remove unread private members", Justification = "<Pending>")]
+        // ReSharper disable once NotAccessedField.Local
         private bool _out;
 
         protected EqualityComparersBenchmark(IEqualityComparer<T> manual, IEqualityComparer<T> il, IEqualityComparer<T> nito)
@@ -28,25 +27,6 @@ namespace ILLightenComparer.Benchmarks.Benchmark.EqualityComparer
             _manual = manual;
             _il = il;
             _nito = nito;
-        }
-
-        [GlobalSetup]
-        public void Setup()
-        {
-            for (var i = 0; i < N; i++) {
-                _one[i] = _fixture.Create<T>();
-                _other[i] = _fixture.Create<T>();
-
-                var compare = _manual.Equals(_one[i], _other[i]);
-
-                if (compare != _il.Equals(_one[i], _other[i])) {
-                    throw new InvalidOperationException("Light comparer is broken.");
-                }
-
-                if (compare != _nito.Equals(_one[i], _other[i])) {
-                    throw new InvalidOperationException("Nito comparer is broken.");
-                }
-            }
         }
 
         [Benchmark(Description = "IL Lighten Comparer")]
@@ -70,6 +50,25 @@ namespace ILLightenComparer.Benchmarks.Benchmark.EqualityComparer
         {
             for (var i = 0; i < N; i++) {
                 _out = _nito.Equals(_one[i], _other[i]);
+            }
+        }
+
+        [GlobalSetup]
+        public void Setup()
+        {
+            for (var i = 0; i < N; i++) {
+                _one[i] = _fixture.Create<T>();
+                _other[i] = _fixture.Create<T>();
+
+                var compare = _manual.Equals(_one[i], _other[i]);
+
+                if (compare != _il.Equals(_one[i], _other[i])) {
+                    throw new InvalidOperationException("Light comparer is broken.");
+                }
+
+                if (compare != _nito.Equals(_one[i], _other[i])) {
+                    throw new InvalidOperationException("Nito comparer is broken.");
+                }
             }
         }
     }

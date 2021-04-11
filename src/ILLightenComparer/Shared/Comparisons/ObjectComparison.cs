@@ -1,21 +1,24 @@
 ﻿using System.Reflection.Emit;
 using ILLightenComparer.Abstractions;
+using ILLightenComparer.Extensions;
 using ILLightenComparer.Variables;
 using Illuminator;
-using ILLightenComparer.Extensions;
 
 namespace ILLightenComparer.Shared.Comparisons
 {
     // todo: 3. use as optimization. cannot be used now, because object of any type can be passed. DelayedCompare resolves it.
     internal sealed class ObjectComparison : IComparisonEmitter
     {
-        private readonly IVariable _variable;
-
-        public ObjectComparison(IVariable variable) => _variable = variable;
-
-        public static ObjectComparison Create(IVariable variable) => (variable.VariableType == typeof(object))
+        public static ObjectComparison Create(IVariable variable) => variable.VariableType == typeof(object)
             ? new ObjectComparison(variable)
             : null;
+
+        private readonly IVariable _variable;
+
+        public ObjectComparison(IVariable variable)
+        {
+            _variable = variable;
+        }
 
         public ILEmitter Emit(ILEmitter il, Label next) =>
             il.Emit(_variable.Load(Arg.Y))

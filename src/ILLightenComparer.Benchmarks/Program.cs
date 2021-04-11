@@ -8,7 +8,7 @@ namespace ILLightenComparer.Benchmarks
     public sealed class Program
     {
         /// <summary>
-        /// Benchmarks runner for ILLightenComparer.
+        ///     Benchmarks runner for ILLightenComparer.
         /// </summary>
         /// <param name="compare">Runs benchmarks for IComparer&lt;T&gt;.</param>
         /// <param name="equals">Runs benchmarks for IEqualityComparer&lt;T&gt;.Equals.</param>

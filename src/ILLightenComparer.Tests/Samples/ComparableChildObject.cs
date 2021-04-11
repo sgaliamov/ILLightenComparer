@@ -10,7 +10,8 @@ namespace ILLightenComparer.Tests.Samples
         IComparable<ComparableChildObject<TMember>>
     {
         [SuppressMessage("Design", "RCS1158:Static member in generic type should use a type parameter.", Justification = "Test class")]
-        new public static bool UsedCompareTo;
+        public new static bool UsedCompareTo;
+
         public static IComparer<TMember> ChildComparer = Helper.DefaultComparer<TMember>();
 
         public TMember ChildField;
@@ -42,8 +43,8 @@ namespace ILLightenComparer.Tests.Samples
             return ChildComparer.Compare(ChildProperty, other.ChildProperty);
         }
 
-        public override string ToString() => this.ToJson();
-
         public override int CompareTo(ComparableBaseObject<TMember> other) => CompareTo(other as ComparableChildObject<TMember>);
+
+        public override string ToString() => this.ToJson();
     }
 }

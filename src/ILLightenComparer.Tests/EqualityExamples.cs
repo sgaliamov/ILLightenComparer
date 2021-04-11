@@ -8,6 +8,8 @@ namespace ILLightenComparer.Tests
 {
     public sealed class EqualityExamples
     {
+        private readonly Fixture _fixture = new();
+
         [Fact]
         public void Basic_usage()
         {
@@ -48,7 +50,5 @@ namespace ILLightenComparer.Tests
                 hashX.Should().Be(hashY);
             }
         }
-
-        private readonly Fixture _fixture = new Fixture();
     }
 }

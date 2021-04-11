@@ -15,6 +15,7 @@ namespace ILLightenComparer.Comparer
     internal sealed class ComparisonResolver : IResolver
     {
         private static readonly MethodInfo DelayedCompare = typeof(IComparerContext).GetMethod(nameof(IComparerContext.DelayedCompare));
+
         private static readonly MethodInfo StringCompareMethod = typeof(string).GetMethod(
             nameof(string.Compare),
             new[] { typeof(string), typeof(string), typeof(StringComparison) });
@@ -29,14 +30,14 @@ namespace ILLightenComparer.Comparer
             var collectionComparer = new ArrayComparisonEmitter(this, CustomEmitters.EmitCheckIfLoopsAreDone, CustomEmitters.EmitReferenceComparison);
 
             _comparisonFactories = new Func<IVariable, IComparisonEmitter>[] {
-                (IVariable variable) => NullableComparison.Create(this, CustomEmitters.EmitReturnIfTruthy, CustomEmitters.EmitCheckNullablesForValue, variable),
+                variable => NullableComparison.Create(this, CustomEmitters.EmitReturnIfTruthy, CustomEmitters.EmitCheckNullablesForValue, variable),
                 IntegralsComparison.Create,
-                (IVariable variable) => StringsComparison.Create(StringCompareMethod, CustomEmitters.EmitReturnIfTruthy, _configuration, variable),
+                variable => StringsComparison.Create(StringCompareMethod, CustomEmitters.EmitReturnIfTruthy, _configuration, variable),
                 ComparablesComparison.Create,
-                (IVariable variable) => MembersComparison.Create(this, membersProvider, variable),
-                (IVariable variable) => ArraysComparison.Create(collectionComparer, _configuration, variable),
-                (IVariable variable) => EnumerablesComparison.Create(this, collectionComparer, CustomEmitters.EmitCheckIfLoopsAreDone, _configuration, variable),
-                (IVariable variable) => IndirectComparison.Create(
+                variable => MembersComparison.Create(this, membersProvider, variable),
+                variable => ArraysComparison.Create(collectionComparer, _configuration, variable),
+                variable => EnumerablesComparison.Create(this, collectionComparer, CustomEmitters.EmitCheckIfLoopsAreDone, _configuration, variable),
+                variable => IndirectComparison.Create(
                     CustomEmitters.EmitReturnIfTruthy,
                     variableType => context.GetStaticCompareMethodInfo(variableType),
                     DelayedCompare,
@@ -52,8 +53,8 @@ namespace ILLightenComparer.Comparer
             }
 
             var comparison = _comparisonFactories
-                .Select(factory => factory(variable))
-                .FirstOrDefault(x => x != null);
+                             .Select(factory => factory(variable))
+                             .FirstOrDefault(x => x != null);
 
             if (comparison == null) {
                 throw new NotSupportedException($"{variable.VariableType.DisplayName()} is not supported.");

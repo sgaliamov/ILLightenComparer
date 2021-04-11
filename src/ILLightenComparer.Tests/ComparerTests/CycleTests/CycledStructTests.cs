@@ -10,33 +10,26 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests
 {
     public sealed class CycledStructTests
     {
+        private readonly IComparerBuilder _builder;
+
         public CycledStructTests()
         {
             _builder = new ComparerBuilder(config =>
-                           config.DefineMembersOrder<CycledStruct>(
-                               order => order.Member(o => o.Property)
-                                             .Member(o => o.FirstObject)
-                                             .Member(o => o.SecondObject)))
+                                               config.DefineMembersOrder<CycledStruct>(
+                                                   order => order.Member(o => o.Property)
+                                                                 .Member(o => o.FirstObject)
+                                                                 .Member(o => o.SecondObject)))
                        .For<CycledStructObject>(config =>
-                           config.DefineMembersOrder(order =>
-                                     order.Member(o => o.TextField)
-                                          .Member(o => o.FirstStruct)
-                                          .Member(o => o.SecondStruct))
-                                 .IgnoreMember(o => o.Id))
+                                                    config.DefineMembersOrder(order =>
+                                                                                  order.Member(o => o.TextField)
+                                                                                       .Member(o => o.FirstStruct)
+                                                                                       .Member(o => o.SecondStruct))
+                                                          .IgnoreMember(o => o.Id))
                        .Builder;
         }
 
-        [Fact]
-        public void Sefl_sealed_struct_should_be_equal()
-        {
-            var comparer = _builder.GetComparer<SelfStruct<Guid>>();
-            var x = new SelfStruct<Guid> {
-                Key = Guid.NewGuid(),
-                Value = Guid.NewGuid()
-            };
-
-            comparer.Compare(x, x).Should().Be(0);
-        }
+        public IComparer<CycledStruct> ComparerStruct => _builder.GetComparer<CycledStruct>();
+        public IComparer<CycledStructObject> ComparerObject => _builder.GetComparer<CycledStructObject>();
 
         [Fact]
         public void Detects_cycle_in_object()
@@ -148,8 +141,16 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests
             }
         }
 
-        public IComparer<CycledStruct> ComparerStruct => _builder.GetComparer<CycledStruct>();
-        public IComparer<CycledStructObject> ComparerObject => _builder.GetComparer<CycledStructObject>();
-        private readonly IComparerBuilder _builder;
+        [Fact]
+        public void Sefl_sealed_struct_should_be_equal()
+        {
+            var comparer = _builder.GetComparer<SelfStruct<Guid>>();
+            var x = new SelfStruct<Guid> {
+                Key = Guid.NewGuid(),
+                Value = Guid.NewGuid()
+            };
+
+            comparer.Compare(x, x).Should().Be(0);
+        }
     }
 }

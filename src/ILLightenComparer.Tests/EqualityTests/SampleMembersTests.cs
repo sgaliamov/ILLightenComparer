@@ -10,20 +10,6 @@ namespace ILLightenComparer.Tests.EqualityTests
 {
     public sealed class SampleMembersTests
     {
-        [Fact]
-        public void Compare_sample_objects()
-        {
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false);
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true);
-        }
-
-        [Fact]
-        public void Compare_sample_structs()
-        {
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false);
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true);
-        }
-
         private static void Test(Type genericSampleType, Type genericSampleComparer, bool nullable)
         {
             var types = nullable ? TestTypes.NullableTypes : TestTypes.Types;
@@ -38,6 +24,20 @@ namespace ILLightenComparer.Tests.EqualityTests
 
                     new GenericTests(false).GenericTest(objectType, comparer, Constants.SmallCount);
                 });
+        }
+
+        [Fact]
+        public void Compare_sample_objects()
+        {
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false);
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true);
+        }
+
+        [Fact]
+        public void Compare_sample_structs()
+        {
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false);
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true);
         }
     }
 }

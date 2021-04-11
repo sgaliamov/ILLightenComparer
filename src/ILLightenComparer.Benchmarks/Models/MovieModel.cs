@@ -69,14 +69,16 @@ namespace ILLightenComparer.Benchmarks.Models
     {
         public static IEqualityComparer<MovieModel> Instance { get; } = new MovieModelEqualityComparer();
 
-        public bool Equals([AllowNull] MovieModel one, [AllowNull] MovieModel other) => one == other
-            || (one != null && other != null
+        public bool Equals([AllowNull] MovieModel one, [AllowNull] MovieModel other) =>
+            one == other
+            || one != null
+            && other != null
             && EqualityComparer<string[]>.Default.Equals(one.Actors, other.Actors)
             && string.Equals(one.Genre, other.Genre, StringComparison.Ordinal)
             && one.Id == other.Id
             && one.Price == other.Price
             && one.ReleaseDate == other.ReleaseDate
-            && string.Equals(one.Title, other.Title, StringComparison.Ordinal));
+            && string.Equals(one.Title, other.Title, StringComparison.Ordinal);
 
         public int GetHashCode([DisallowNull] MovieModel obj)
         {
@@ -110,13 +112,13 @@ namespace ILLightenComparer.Benchmarks.Models
                 return 1;
             }
 
-            for (int i = 0; ; i++) {
+            for (var i = 0;; i++) {
                 if (i == x.Length) {
                     return i == y.Length ? 0 : 1;
-                } else {
-                    if (i == y.Length) {
-                        return -1;
-                    }
+                }
+
+                if (i == y.Length) {
+                    return -1;
                 }
 
                 var c = string.Compare(x[i], y[i], StringComparison.Ordinal);

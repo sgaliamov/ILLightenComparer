@@ -9,7 +9,10 @@ namespace ILLightenComparer.Tests.Comparers
     {
         private readonly IComparer<TValue> _valueComparer;
 
-        public NullableComparer(IComparer<TValue> valueComparer = null) => _valueComparer = valueComparer ?? Helper.DefaultComparer<TValue>();
+        public NullableComparer(IComparer<TValue> valueComparer = null)
+        {
+            _valueComparer = valueComparer ?? Helper.DefaultComparer<TValue>();
+        }
 
         public int Compare(object x, object y)
         {

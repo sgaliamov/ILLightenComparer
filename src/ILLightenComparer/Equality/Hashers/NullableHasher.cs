@@ -11,17 +11,6 @@ namespace ILLightenComparer.Equality.Hashers
 {
     internal sealed class NullableHasher : IHasherEmitter
     {
-        private readonly HasherResolver _resolver;
-        private readonly IVariable _variable;
-        private readonly MethodInfo _hasValueMethod;
-
-        private NullableHasher(HasherResolver resolver, IVariable variable)
-        {
-            _resolver = resolver;
-            _variable = variable;
-            _hasValueMethod = _variable.VariableType.GetPropertyGetter("HasValue");
-        }
-
         public static NullableHasher Create(HasherResolver resolver, IVariable variable)
         {
             if (variable.VariableType.IsNullable()) {
@@ -29,6 +18,17 @@ namespace ILLightenComparer.Equality.Hashers
             }
 
             return null;
+        }
+
+        private readonly MethodInfo _hasValueMethod;
+        private readonly HasherResolver _resolver;
+        private readonly IVariable _variable;
+
+        private NullableHasher(HasherResolver resolver, IVariable variable)
+        {
+            _resolver = resolver;
+            _variable = variable;
+            _hasValueMethod = _variable.VariableType.GetPropertyGetter("HasValue");
         }
 
         public ILEmitter Emit(ILEmitter il)
@@ -50,9 +50,9 @@ namespace ILLightenComparer.Equality.Hashers
                 new Dictionary<int, LocalBuilder>(1) { [Arg.Input] = nullable });
 
             return _resolver
-                .GetHasherEmitter(nullableVariable)
-                .Emit(il)
-                .MarkLabel(exit);
+                   .GetHasherEmitter(nullableVariable)
+                   .Emit(il)
+                   .MarkLabel(exit);
         }
 
         public ILEmitter Emit(ILEmitter il, LocalBuilder _) => Emit(il);

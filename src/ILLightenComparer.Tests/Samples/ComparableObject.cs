@@ -8,12 +8,10 @@ namespace ILLightenComparer.Tests.Samples
     [SuppressMessage("Design", "CA1036:Override methods on comparable types", Justification = "Test class")]
     public sealed class ComparableObject<TMember> : IComparable<ComparableObject<TMember>>
     {
-        private readonly static IComparer<TMember> Comparer = Helper.DefaultComparer<TMember>();
+        private static readonly IComparer<TMember> Comparer = Helper.DefaultComparer<TMember>();
 
         public TMember Field;
         public TMember Property { get; set; }
-
-        public override string ToString() => $"Object: {this.ToJson()}";
 
         public int CompareTo(ComparableObject<TMember> other)
         {
@@ -32,5 +30,7 @@ namespace ILLightenComparer.Tests.Samples
 
             return Comparer.Compare(Property, other.Property);
         }
+
+        public override string ToString() => $"Object: {this.ToJson()}";
     }
 }

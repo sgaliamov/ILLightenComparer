@@ -12,21 +12,21 @@ namespace ILLightenComparer.Equality
 {
     internal sealed class HasherResolver
     {
-        private readonly IReadOnlyCollection<Func<IVariable, IHasherEmitter>> _hashersFactories;
         private readonly IConfigurationProvider _configuration;
+        private readonly IReadOnlyCollection<Func<IVariable, IHasherEmitter>> _hashersFactories;
 
         public HasherResolver(EqualityContext context, MembersProvider membersProvider, IConfigurationProvider configuration)
         {
             _configuration = configuration;
 
             _hashersFactories = new Func<IVariable, IHasherEmitter>[] {
-                (IVariable variable) => NullableHasher.Create(this, variable),
-                (IVariable variable) => StringHasher.Create(_configuration, variable),
+                variable => NullableHasher.Create(this, variable),
+                variable => StringHasher.Create(_configuration, variable),
                 BasicHasher.Create,
-                (IVariable variable) => MembersHasher.Create(this, membersProvider, _configuration, variable),
-                (IVariable variable) => ArrayHasher.Create(this, _configuration, variable),
-                (IVariable variable) => EnumerablesHasher.Create(this, _configuration, variable),
-                (IVariable variable) => IndirectHasher.Create(context, variable)
+                variable => MembersHasher.Create(this, membersProvider, _configuration, variable),
+                variable => ArrayHasher.Create(this, _configuration, variable),
+                variable => EnumerablesHasher.Create(this, _configuration, variable),
+                variable => IndirectHasher.Create(context, variable)
             };
         }
 
@@ -38,8 +38,8 @@ namespace ILLightenComparer.Equality
             }
 
             var hasher = _hashersFactories
-                .Select(factory => factory(variable))
-                .FirstOrDefault(x => x != null);
+                         .Select(factory => factory(variable))
+                         .FirstOrDefault(x => x != null);
 
             if (hasher == null) {
                 throw new NotSupportedException($"{variable.VariableType.DisplayName()} is not supported.");

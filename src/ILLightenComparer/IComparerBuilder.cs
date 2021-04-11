@@ -10,6 +10,14 @@ namespace ILLightenComparer
     public interface IComparerBuilder : IComparerProvider, IEqualityComparerProvider
     {
         /// <summary>
+        ///     Defines configuration for generated comparers.
+        ///     Creates another builder context.
+        /// </summary>
+        /// <param name="config">Callback action to configure comparers.</param>
+        /// <returns>Self.</returns>
+        IComparerBuilder Configure(Action<IConfigurationBuilder> config);
+
+        /// <summary>
         ///     Converts the common builder to typed version.
         ///     Defines type for the following methods.
         /// </summary>
@@ -25,14 +33,6 @@ namespace ILLightenComparer
         /// <param name="config">Callback action to configure comparer for defined type <typeparamref name="T" />.</param>
         /// <returns>Typed instance of comparer builder.</returns>
         IComparerBuilder<T> For<T>(Action<IConfigurationBuilder<T>> config);
-
-        /// <summary>
-        ///     Defines configuration for generated comparers.
-        ///     Creates another builder context.
-        /// </summary>
-        /// <param name="config">Callback action to configure comparers.</param>
-        /// <returns>Self.</returns>
-        IComparerBuilder Configure(Action<IConfigurationBuilder> config);
     }
 
     /// <summary>
@@ -45,6 +45,14 @@ namespace ILLightenComparer
         ///     Self.
         /// </summary>
         IComparerBuilder Builder { get; }
+
+        /// <summary>
+        ///     Defines configuration for comparer of type <see cref="IComparer{T}" />.
+        ///     Creates another builder context.
+        /// </summary>
+        /// <param name="config">Callback action to configure comparer for defined type <typeparamref name="T" />.</param>
+        /// <returns>Typed instance of comparer builder.</returns>
+        IComparerBuilder<T> Configure(Action<IConfigurationBuilder<T>> config);
 
         /// <summary>
         ///     Defines next type for the following methods.
@@ -61,14 +69,6 @@ namespace ILLightenComparer
         /// <param name="config">Callback action to configure comparer for defined type <typeparamref name="TOther" />.</param>
         /// <returns>Typed instance of comparer builder.</returns>
         IComparerBuilder<TOther> For<TOther>(Action<IConfigurationBuilder<TOther>> config);
-
-        /// <summary>
-        ///     Defines configuration for comparer of type <see cref="IComparer{T}" />.
-        ///     Creates another builder context.
-        /// </summary>
-        /// <param name="config">Callback action to configure comparer for defined type <typeparamref name="T" />.</param>
-        /// <returns>Typed instance of comparer builder.</returns>
-        IComparerBuilder<T> Configure(Action<IConfigurationBuilder<T>> config);
     }
 
     /// <summary>
@@ -76,16 +76,6 @@ namespace ILLightenComparer
     /// </summary>
     public interface IDefaultConfigurationBuilder
     {
-        /// <summary>
-        ///     Enables or disables default cycle detection.
-        /// </summary>
-        /// <param name="value">
-        ///     Default value true.
-        ///     null value resets to default.
-        /// </param>
-        /// <returns>Configuration builder.</returns>
-        IConfigurationBuilder SetDefaultCyclesDetection(bool? value);
-
         /// <summary>
         ///     If enabled collections order is ignored during comparison by default.
         /// </summary>
@@ -95,6 +85,16 @@ namespace ILLightenComparer
         /// </param>
         /// <returns>Configuration builder.</returns>
         IConfigurationBuilder SetDefaultCollectionsOrderIgnoring(bool? value);
+
+        /// <summary>
+        ///     Enables or disables default cycle detection.
+        /// </summary>
+        /// <param name="value">
+        ///     Default value true.
+        ///     null value resets to default.
+        /// </param>
+        /// <returns>Configuration builder.</returns>
+        IConfigurationBuilder SetDefaultCyclesDetection(bool? value);
 
         /// <summary>
         ///     If enabled fields are used to generated comparer by default.
@@ -107,16 +107,6 @@ namespace ILLightenComparer
         IConfigurationBuilder SetDefaultFieldsInclusion(bool? value);
 
         /// <summary>
-        ///     Defines default <see cref="StringComparison" /> type.
-        /// </summary>
-        /// <param name="value">
-        ///     Default value is <see cref="StringComparison.Ordinal" />.
-        ///     null value resets to default.
-        /// </param>
-        /// <returns>Configuration builder.</returns>
-        IConfigurationBuilder SetDefaultStringComparisonType(StringComparison? value);
-
-        /// <summary>
         ///     Defines default hash seed.
         /// </summary>
         /// <param name="value">
@@ -125,6 +115,16 @@ namespace ILLightenComparer
         /// </param>
         /// <returns>Configuration builder.</returns>
         IConfigurationBuilder SetDefaultHashSeed(long? value);
+
+        /// <summary>
+        ///     Defines default <see cref="StringComparison" /> type.
+        /// </summary>
+        /// <param name="value">
+        ///     Default value is <see cref="StringComparison.Ordinal" />.
+        ///     null value resets to default.
+        /// </param>
+        /// <returns>Configuration builder.</returns>
+        IConfigurationBuilder SetDefaultStringComparisonType(StringComparison? value);
     }
 
     /// <summary>
@@ -147,6 +147,23 @@ namespace ILLightenComparer
     /// </summary>
     public interface IConfigurationBuilder : IDefaultConfigurationBuilder
     {
+        /// <summary>
+        ///     Defines configuration for comparer of type <see cref="IComparer{T}" />.
+        ///     Creates another builder context.
+        ///     Defines next type for the following methods.
+        /// </summary>
+        /// <param name="config">Callback action to configure comparer for defined type <typeparamref name="T" />.</param>
+        /// <returns>Typed instance of comparer builder.</returns>
+        IConfigurationBuilder<T> ConfigureFor<T>(Action<IConfigurationBuilder<T>> config);
+
+        /// <summary>
+        ///     Defines order in which members should be compared.
+        /// </summary>
+        /// <typeparam name="T">The type whose instances need to compare.</typeparam>
+        /// <param name="order">Callback to configure order of members.</param>
+        /// <returns>Configuration builder.</returns>
+        IConfigurationBuilder DefineMembersOrder<T>(Action<IMembersOrder<T>> order);
+
         /// <summary>
         ///     Enables or disables cycle detection.
         /// </summary>
@@ -190,36 +207,6 @@ namespace ILLightenComparer
         IConfigurationBuilder IncludeFields(Type type, bool? value);
 
         /// <summary>
-        ///     Defines order in which members should be compared.
-        /// </summary>
-        /// <typeparam name="T">The type whose instances need to compare.</typeparam>
-        /// <param name="order">Callback to configure order of members.</param>
-        /// <returns>Configuration builder.</returns>
-        IConfigurationBuilder DefineMembersOrder<T>(Action<IMembersOrder<T>> order);
-
-        /// <summary>
-        ///     Defines <see cref="StringComparison" /> type for strings comparison.
-        /// </summary>
-        /// <param name="type">The type whose instances need to compare.</param>
-        /// <param name="value">
-        ///     Default value is <see cref="StringComparison.Ordinal" />.
-        ///     null value resets to default.
-        /// </param>
-        /// <returns>Configuration builder.</returns>
-        IConfigurationBuilder SetStringComparisonType(Type type, StringComparison? value);
-
-        /// <summary>
-        ///     Defines hash seed for the <paramref name="type"/>.
-        /// </summary>
-        /// <param name="type">The type whose instances need to be compared.</param>
-        /// <param name="value">
-        ///     Default value is 0x1505L.
-        ///     null value resets to default.
-        /// </param>
-        /// <returns>Configuration builder.</returns>
-        IConfigurationBuilder SetHashSeed(Type type, long? value);
-
-        /// <summary>
         ///     Defines custom comparer.
         /// </summary>
         /// <typeparam name="T">The type whose instances need to compare.</typeparam>
@@ -252,13 +239,26 @@ namespace ILLightenComparer
         IConfigurationBuilder SetCustomEqualityComparer<TComparer>();
 
         /// <summary>
-        ///     Defines configuration for comparer of type <see cref="IComparer{T}" />.
-        ///     Creates another builder context.
-        ///     Defines next type for the following methods.
+        ///     Defines hash seed for the <paramref name="type" />.
         /// </summary>
-        /// <param name="config">Callback action to configure comparer for defined type <typeparamref name="T" />.</param>
-        /// <returns>Typed instance of comparer builder.</returns>
-        IConfigurationBuilder<T> ConfigureFor<T>(Action<IConfigurationBuilder<T>> config);
+        /// <param name="type">The type whose instances need to be compared.</param>
+        /// <param name="value">
+        ///     Default value is 0x1505L.
+        ///     null value resets to default.
+        /// </param>
+        /// <returns>Configuration builder.</returns>
+        IConfigurationBuilder SetHashSeed(Type type, long? value);
+
+        /// <summary>
+        ///     Defines <see cref="StringComparison" /> type for strings comparison.
+        /// </summary>
+        /// <param name="type">The type whose instances need to compare.</param>
+        /// <param name="value">
+        ///     Default value is <see cref="StringComparison.Ordinal" />.
+        ///     null value resets to default.
+        /// </param>
+        /// <returns>Configuration builder.</returns>
+        IConfigurationBuilder SetStringComparisonType(Type type, StringComparison? value);
     }
 
     /// <summary>
@@ -266,6 +266,14 @@ namespace ILLightenComparer
     /// </summary>
     public interface IConfigurationBuilder<T>
     {
+        /// <summary>
+        ///     Defines order in which members should be compared.
+        /// </summary>
+        /// <typeparam name="T">The type whose instances need to compare.</typeparam>
+        /// <param name="order">Callback to configure order of members.</param>
+        /// <returns>Configuration builder.</returns>
+        IConfigurationBuilder<T> DefineMembersOrder(Action<IMembersOrder<T>> order);
+
         /// <summary>
         ///     Enables or disables cycle detection.
         /// </summary>
@@ -304,14 +312,6 @@ namespace ILLightenComparer
         /// </param>
         /// <returns>Configuration builder.</returns>
         IConfigurationBuilder<T> IncludeFields(bool? value);
-
-        /// <summary>
-        ///     Defines order in which members should be compared.
-        /// </summary>
-        /// <typeparam name="T">The type whose instances need to compare.</typeparam>
-        /// <param name="order">Callback to configure order of members.</param>
-        /// <returns>Configuration builder.</returns>
-        IConfigurationBuilder<T> DefineMembersOrder(Action<IMembersOrder<T>> order);
 
         /// <summary>
         ///     Defined <see cref="StringComparison" /> type for strings comparison.

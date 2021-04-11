@@ -1,5 +1,4 @@
-﻿using System;
-using AutoFixture;
+﻿using AutoFixture;
 using FluentAssertions;
 using ILLightenComparer.Tests.ComparerTests.HierarchyTests.Samples.Nested;
 using ILLightenComparer.Tests.Utilities;
@@ -9,6 +8,8 @@ namespace ILLightenComparer.Tests.ComparerTests.HierarchyTests
 {
     public sealed class AbstractComparersTests
     {
+        private readonly IFixture _fixture = FixtureBuilder.GetInstance();
+
         [Fact]
         public void Comparison_uses_only_members_of_abstract_class()
         {
@@ -49,7 +50,5 @@ namespace ILLightenComparer.Tests.ComparerTests.HierarchyTests
                 actual.Should().Be(expected, $"\nx: {x.ToJson()},\ny: {y.ToJson()}");
             }
         }
-
-        private readonly IFixture _fixture = FixtureBuilder.GetInstance();
     }
 }

@@ -25,18 +25,6 @@ namespace ILLightenComparer.Shared.Comparisons
             _emitReferenceComparison = emitReferenceComparison;
         }
 
-        public (LocalBuilder collectionX, LocalBuilder collectionY) EmitLoad(IVariable variable, ILEmitter il, Label gotoNext)
-        {
-            variable.Load(il, Arg.X).Stloc(variable.VariableType, out var collectionX);
-            variable.Load(il, Arg.Y).Stloc(variable.VariableType, out var collectionY);
-
-            if (!variable.VariableType.IsValueType) {
-                _emitReferenceComparison(il, Ldloc(collectionX), Ldloc(collectionY), Br(gotoNext)); // need, because a collection can be a member of an object
-            }
-
-            return (collectionX, collectionY);
-        }
-
         public ILEmitter EmitCompareArrays(
             ILEmitter il,
             Type arrayType,
@@ -76,6 +64,18 @@ namespace ILLightenComparer.Shared.Comparisons
                          .Stloc(index)
                          .Br(loopStart);
             }
+        }
+
+        public (LocalBuilder collectionX, LocalBuilder collectionY) EmitLoad(IVariable variable, ILEmitter il, Label gotoNext)
+        {
+            variable.Load(il, Arg.X).Stloc(variable.VariableType, out var collectionX);
+            variable.Load(il, Arg.Y).Stloc(variable.VariableType, out var collectionY);
+
+            if (!variable.VariableType.IsValueType) {
+                _emitReferenceComparison(il, Ldloc(collectionX), Ldloc(collectionY), Br(gotoNext)); // need, because a collection can be a member of an object
+            }
+
+            return (collectionX, collectionY);
         }
     }
 }

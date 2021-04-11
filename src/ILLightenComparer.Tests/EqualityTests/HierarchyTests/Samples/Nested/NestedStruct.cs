@@ -12,11 +12,9 @@ namespace ILLightenComparer.Tests.EqualityTests.HierarchyTests.Samples.Nested
 
         public override bool Equals(object obj) => Equals((NestedStruct)obj);
 
-        public bool Equals(NestedStruct other)
-        {
-            return Property == other.Property
-                && NullableProperty == other.NullableProperty;
-        }
+        public bool Equals(NestedStruct other) =>
+            Property == other.Property
+            && NullableProperty == other.NullableProperty;
 
         public override int GetHashCode() => HashCodeCombiner.Combine(Property, NullableProperty);
     }

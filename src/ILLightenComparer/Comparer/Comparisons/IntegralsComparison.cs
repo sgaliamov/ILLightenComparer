@@ -8,10 +8,6 @@ namespace ILLightenComparer.Comparer.Comparisons
 {
     internal sealed class IntegralsComparison : IComparisonEmitter
     {
-        private readonly IVariable _variable;
-
-        private IntegralsComparison(IVariable variable) => _variable = variable;
-
         public static IntegralsComparison Create(IVariable variable)
         {
             if (variable.VariableType.GetUnderlyingType().IsIntegral()) {
@@ -19,6 +15,13 @@ namespace ILLightenComparer.Comparer.Comparisons
             }
 
             return null;
+        }
+
+        private readonly IVariable _variable;
+
+        private IntegralsComparison(IVariable variable)
+        {
+            _variable = variable;
         }
 
         public ILEmitter Emit(ILEmitter il, Label _) => il.Sub(_variable.Load(Arg.X), _variable.Load(Arg.Y));

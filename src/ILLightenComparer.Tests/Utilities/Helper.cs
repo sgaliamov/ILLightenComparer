@@ -16,6 +16,16 @@ namespace ILLightenComparer.Tests.Utilities
 
     internal static class Helper
     {
+        public static readonly HashSet<Type> BasicTypes = new(typeof(object).Assembly
+                                                                            .GetTypes()
+                                                                            .Where(x => x.FullName.StartsWith("System."))
+                                                                            .Where(x => x.IsPublic)
+                                                                            .Where(x => !x.IsAbstract)
+                                                                            .Where(x => !x.IsGenericType)
+                                                                            .Where(x => x.ImplementsGenericInterface(typeof(IComparable<>)))
+                                                                            .Where(x => x.Name != "ArgIterator")
+                                                                            .Where(x => x.Name != "IntPtr"));
+
         public static IComparer<T> DefaultComparer<T>() => typeof(T) == typeof(object)
             ? new ObjectComparer() as IComparer<T>
             : Comparer<T>.Default;
@@ -48,8 +58,8 @@ namespace ILLightenComparer.Tests.Utilities
                 x.Should().Be(y);
             } else {
                 x.Should().BeEquivalentTo(y, options => options
-                    .ComparingByMembers<T>()
-                    .WithStrictOrdering());
+                                                        .ComparingByMembers<T>()
+                                                        .WithStrictOrdering());
             }
         }
 
@@ -71,9 +81,9 @@ namespace ILLightenComparer.Tests.Utilities
         public static void Parallel(ThreadStart action, int count)
         {
             var threads = Enumerable
-                .Range(0, count)
-                .Select(_ => new Thread(action))
-                .ToArray();
+                          .Range(0, count)
+                          .Select(_ => new Thread(action))
+                          .ToArray();
 
             foreach (var thread in threads) {
                 thread.Start();
@@ -106,15 +116,5 @@ namespace ILLightenComparer.Tests.Utilities
                 yield return ThreadSafeRandom.NextDouble() < probability ? default : item;
             }
         }
-
-        public static readonly HashSet<Type> BasicTypes = new HashSet<Type>(typeof(object).Assembly
-            .GetTypes()
-            .Where(x => x.FullName.StartsWith("System."))
-            .Where(x => x.IsPublic)
-            .Where(x => !x.IsAbstract)
-            .Where(x => !x.IsGenericType)
-            .Where(x => x.ImplementsGenericInterface(typeof(IComparable<>)))
-            .Where(x => x.Name != "ArgIterator")
-            .Where(x => x.Name != "IntPtr"));
     }
 }

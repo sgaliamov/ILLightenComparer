@@ -13,6 +13,16 @@ namespace ILLightenComparer.Shared
     {
         public static readonly ConstructorInfo DefaultConstructor = typeof(CycleDetectionSet).GetConstructor(Type.EmptyTypes);
 
+        internal static readonly MethodInfo GetCountProperty = typeof(CycleDetectionSet).GetProperty(nameof(Count))!.GetGetMethod();
+
+        private static readonly MethodInfo RemoveMethod = typeof(IDictionary).FindMethod(
+            nameof(IDictionary.Remove),
+            new[] { typeof(object) });
+
+        private static readonly MethodInfo TryAddMethod = typeof(CycleDetectionSet).GetMethod(
+            nameof(ConcurrentDictionary<object, byte>.TryAdd),
+            new[] { typeof(object), typeof(byte) });
+
         public static ILEmitterFunc Remove(short set, short arg, Type argType) =>
             CallMethod(
                 RemoveMethod,
@@ -29,15 +39,5 @@ namespace ILLightenComparer.Shared
 
         public static ILEmitterFunc GetCount(short arg) =>
             CallMethod(GetCountProperty, LoadArgument(arg));
-
-        internal static readonly MethodInfo GetCountProperty = typeof(CycleDetectionSet).GetProperty(nameof(Count))!.GetGetMethod();
-
-        private static readonly MethodInfo RemoveMethod = typeof(IDictionary).FindMethod(
-            nameof(IDictionary.Remove), 
-            new[] { typeof(object) });
-
-        private static readonly MethodInfo TryAddMethod = typeof(CycleDetectionSet).GetMethod(
-            nameof(ConcurrentDictionary<object, byte>.TryAdd),
-            new[] { typeof(object), typeof(byte) });
     }
 }

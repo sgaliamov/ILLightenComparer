@@ -11,7 +11,7 @@ namespace ILLightenComparer.Tests.Samples
     [SuppressMessage("Design", "CA1036:Override methods on comparable types", Justification = "Test class")]
     public struct SampleEqualityStruct<TMember> : IComparable<SampleEqualityStruct<TMember>>
     {
-        private readonly static IComparer<TMember> Comparer = Helper.DefaultComparer<TMember>();
+        private static readonly IComparer<TMember> Comparer = Helper.DefaultComparer<TMember>();
         public static IEqualityComparer<TMember> EqualityComparer = EqualityComparer<TMember>.Default;
 
         public TMember Field;

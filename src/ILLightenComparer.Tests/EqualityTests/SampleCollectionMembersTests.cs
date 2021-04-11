@@ -16,52 +16,6 @@ namespace ILLightenComparer.Tests.EqualityTests
 {
     public sealed class SampleCollectionMembersTests
     {
-        [Fact]
-        public void Compare_sample_objects()
-        {
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false, false, false);
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false, false, true);
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true, false, false);
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true, false, true);
-        }
-
-        [Fact]
-        public void Compare_sample_objects_ignore_order()
-        {
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false, true, false);
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false, true, true);
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true, true, false);
-            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true, true, true);
-        }
-
-        [Fact]
-        public void Compare_sample_structs()
-        {
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false, false, false);
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false, false, true);
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true, false, false);
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true, false, true);
-        }
-
-        [Fact]
-        public void Compare_sample_structs_ignore_order()
-        {
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false, true, false);
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false, true, true);
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true, true, false);
-            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true, true, true);
-        }
-
-        [Fact]
-        public void Ignoring_order_do_not_add_side_effect()
-        {
-            Ignoring_order_does_not_add_side_effect_for(typeof(ComparableObject<>), typeof(int));
-            Ignoring_order_does_not_add_side_effect_for(typeof(ComparableStruct<>), typeof(int));
-            Ignoring_order_does_not_add_side_effect_for(typeof(int), null);
-            Ignoring_order_does_not_add_side_effect_for(typeof(ComparableObject<>), typeof(ComparableObject<int>));
-            Ignoring_order_does_not_add_side_effect_for(typeof(ComparableStruct<>), typeof(ComparableObject<int>));
-        }
-
         private static void Ignoring_order_does_not_add_side_effect_for(Type sampleType, Type memberType)
         {
             var type = memberType == null
@@ -69,8 +23,8 @@ namespace ILLightenComparer.Tests.EqualityTests
                 : sampleType.MakeGenericType(memberType);
 
             var method = typeof(SampleCollectionMembersTests)
-                .GetGenericMethod(nameof(Ignoring_order_does_not_add_side_effect_for), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(type);
+                         .GetGenericMethod(nameof(Ignoring_order_does_not_add_side_effect_for), BindingFlags.NonPublic | BindingFlags.Static)
+                         .MakeGenericMethod(type);
 
             method.Invoke(null, null);
         }
@@ -118,6 +72,52 @@ namespace ILLightenComparer.Tests.EqualityTests
 
                     new GenericTests(sort).GenericTest(sampleType, sampleComparer, Constants.SmallCount);
                 });
+        }
+
+        [Fact]
+        public void Compare_sample_objects()
+        {
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false, false, false);
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false, false, true);
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true, false, false);
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true, false, true);
+        }
+
+        [Fact]
+        public void Compare_sample_objects_ignore_order()
+        {
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false, true, false);
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), false, true, true);
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true, true, false);
+            Test(typeof(ComparableObject<>), typeof(ComparableObjectEqualityComparer<>), true, true, true);
+        }
+
+        [Fact]
+        public void Compare_sample_structs()
+        {
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false, false, false);
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false, false, true);
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true, false, false);
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true, false, true);
+        }
+
+        [Fact]
+        public void Compare_sample_structs_ignore_order()
+        {
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false, true, false);
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), false, true, true);
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true, true, false);
+            Test(typeof(ComparableStruct<>), typeof(ComparableStructEqualityComparer<>), true, true, true);
+        }
+
+        [Fact]
+        public void Ignoring_order_do_not_add_side_effect()
+        {
+            Ignoring_order_does_not_add_side_effect_for(typeof(ComparableObject<>), typeof(int));
+            Ignoring_order_does_not_add_side_effect_for(typeof(ComparableStruct<>), typeof(int));
+            Ignoring_order_does_not_add_side_effect_for(typeof(int), null);
+            Ignoring_order_does_not_add_side_effect_for(typeof(ComparableObject<>), typeof(ComparableObject<int>));
+            Ignoring_order_does_not_add_side_effect_for(typeof(ComparableStruct<>), typeof(ComparableObject<int>));
         }
     }
 }

@@ -9,15 +9,6 @@ namespace ILLightenComparer.Comparer.Comparisons
 {
     internal sealed class ComparablesComparison : IComparisonEmitter
     {
-        private readonly MethodInfo _compareToMethod;
-        private readonly IVariable _variable;
-
-        private ComparablesComparison(IVariable variable)
-        {
-            _variable = variable;
-            _compareToMethod = _variable.VariableType.GetUnderlyingCompareToMethod();
-        }
-
         public static ComparablesComparison Create(IVariable variable)
         {
             if (variable.VariableType.GetUnderlyingType().IsComparable()) {
@@ -25,6 +16,15 @@ namespace ILLightenComparer.Comparer.Comparisons
             }
 
             return null;
+        }
+
+        private readonly MethodInfo _compareToMethod;
+        private readonly IVariable _variable;
+
+        private ComparablesComparison(IVariable variable)
+        {
+            _variable = variable;
+            _compareToMethod = _variable.VariableType.GetUnderlyingCompareToMethod();
         }
 
         public ILEmitter Emit(ILEmitter il, Label gotoNext)

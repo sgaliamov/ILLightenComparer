@@ -14,9 +14,9 @@ namespace ILLightenComparer.Tests.Utilities
     {
         private static int _counter;
 
-        private static readonly ConditionalWeakTable<object, object> ObjectIds = new ConditionalWeakTable<object, object>();
+        private static readonly ConditionalWeakTable<object, object> ObjectIds = new();
 
-        public static ConditionalWeakTable<object, ConcurrentDictionary<string, object>> ObjectCache = new ConditionalWeakTable<object, ConcurrentDictionary<string, object>>();
+        public static ConditionalWeakTable<object, ConcurrentDictionary<string, object>> ObjectCache = new();
 
         public static T GetOrAddProperty<T, TTarget>(this TTarget obj, string name, Func<T> value)
             where TTarget : class
@@ -46,19 +46,18 @@ namespace ILLightenComparer.Tests.Utilities
         public static MethodInfo GetGenericMethod(this IReflect fromType, string name, BindingFlags bindingFlags)
         {
             return fromType
-                .GetMethods(bindingFlags)
-                .Single(x => x.Name == name && x.IsGenericMethodDefinition);
+                   .GetMethods(bindingFlags)
+                   .Single(x => x.Name == name && x.IsGenericMethodDefinition);
         }
 
         public static TItem[] UnfoldArrays<TItem>(this TItem[] objects) => objects.SelectMany(x => ObjectToArray(x)).Cast<TItem>().ToArray();
 
-        public static object[] ObjectToArray(this object item) => item switch
-        {
+        public static object[] ObjectToArray(this object item) => item switch {
             string str => new[] { str },
             object[] array => UnfoldArrays(array),
             IEnumerable<object> enumerable => UnfoldArrays(enumerable.ToArray()),
             IEnumerable enumerable => UnfoldArrays(enumerable.Cast<object>().ToArray()),
-            _ => new[] { item },
+            _ => new[] { item }
         };
 
         public static IEnumerable<TResult> Select<T, TResult>(this IEnumerable<T> source, Func<T, TResult, TResult> selector)

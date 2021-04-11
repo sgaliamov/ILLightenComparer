@@ -10,19 +10,6 @@ namespace ILLightenComparer.Equality.Hashers
 {
     internal sealed class ArrayHasher : IHasherEmitter
     {
-        private readonly IVariable _variable;
-        private readonly bool _hasCustomComparer;
-        private readonly Configuration _configuration;
-        private readonly ArrayHashEmitter _arrayHashEmitter;
-
-        private ArrayHasher(HasherResolver resolver, IConfigurationProvider configuration, IVariable variable)
-        {
-            _variable = variable;
-            _arrayHashEmitter = new ArrayHashEmitter(resolver, variable);
-            _configuration = configuration.Get(variable.OwnerType);
-            _hasCustomComparer = configuration.HasCustomComparer(variable.VariableType.GetElementType());
-        }
-
         public static ArrayHasher Create(HasherResolver resolver, IConfigurationProvider configuration, IVariable variable)
         {
             var variableType = variable.VariableType;
@@ -33,7 +20,20 @@ namespace ILLightenComparer.Equality.Hashers
             return null;
         }
 
-        public ILEmitter Emit(ILEmitter il) => 
+        private readonly ArrayHashEmitter _arrayHashEmitter;
+        private readonly Configuration _configuration;
+        private readonly bool _hasCustomComparer;
+        private readonly IVariable _variable;
+
+        private ArrayHasher(HasherResolver resolver, IConfigurationProvider configuration, IVariable variable)
+        {
+            _variable = variable;
+            _arrayHashEmitter = new ArrayHashEmitter(resolver, variable);
+            _configuration = configuration.Get(variable.OwnerType);
+            _hasCustomComparer = configuration.HasCustomComparer(variable.VariableType.GetElementType());
+        }
+
+        public ILEmitter Emit(ILEmitter il) =>
             il.Ldc_I8(_configuration.HashSeed)
               .Stloc(typeof(long), out var hash)
               .Emit(this.Emit(hash));

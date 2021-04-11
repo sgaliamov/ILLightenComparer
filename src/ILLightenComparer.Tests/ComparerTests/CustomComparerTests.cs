@@ -12,6 +12,13 @@ namespace ILLightenComparer.Tests.ComparerTests
 {
     public sealed class CustomComparerTests
     {
+        private static void Test(Action action)
+        {
+            Enumerable.Range(0, Constants.SmallCount).AsParallel().ForAll(_ => action());
+        }
+
+        private readonly IFixture _fixture = FixtureBuilder.GetInstance();
+
         [Fact]
         public void After_change_custom_comparer_new_dynamic_comparer_should_be_created()
         {
@@ -23,10 +30,10 @@ namespace ILLightenComparer.Tests.ComparerTests
 
                 var builder = new ComparerBuilder(c => c.SetCustomComparer(new CustomizableComparer<string>((__, _) => 0)));
                 var comparer1 = builder.GetComparer<Tuple<int, string>>();
-                var comparer2 = builder
-                                .Configure(c => c.SetCustomComparer<string>(null)
-                                                 .SetCustomComparer(new CustomizableComparer<int>((__, _) => 0)))
-                                .GetComparer<Tuple<int, string>>();
+                var comparer2 =
+                    builder.Configure(c => c.SetCustomComparer<string>(null)
+                                            .SetCustomComparer(new CustomizableComparer<int>((__, _) => 0)))
+                           .GetComparer<Tuple<int, string>>();
 
                 using (new AssertionScope()) {
                     comparer1.Compare(x, y).Normalize().Should().Be(expected1.Normalize());
@@ -62,8 +69,9 @@ namespace ILLightenComparer.Tests.ComparerTests
                 var x = _fixture.Create<SampleObject<SampleStruct<string>>>();
                 var y = _fixture.Create<SampleObject<SampleStruct<string>>>();
 
-                var comparer = new ComparerBuilder(c => c.SetCustomComparer<SampleStructCustomComparer>())
-                    .GetComparer<SampleObject<SampleStruct<string>>>();
+                var comparer =
+                    new ComparerBuilder(c => c.SetCustomComparer<SampleStructCustomComparer>())
+                        .GetComparer<SampleObject<SampleStruct<string>>>();
 
                 comparer.Compare(x, y).Should().Be(0);
             });
@@ -93,10 +101,10 @@ namespace ILLightenComparer.Tests.ComparerTests
                 }));
                 var expected = referenceComparer.Compare(x, y);
 
-                var comparer = new ComparerBuilder(c => c
-                    .SetDefaultCollectionsOrderIgnoring(_fixture.Create<bool>())
-                    .SetCustomComparer(new CustomizableComparer<int>((__, _) => 0)))
-                    .GetComparer<SampleObject<int[]>>();
+                var comparer =
+                    new ComparerBuilder(c => c.SetDefaultCollectionsOrderIgnoring(_fixture.Create<bool>())
+                                              .SetCustomComparer(new CustomizableComparer<int>((__, _) => 0)))
+                        .GetComparer<SampleObject<int[]>>();
 
                 var actual = comparer.Compare(x, y);
 
@@ -111,17 +119,15 @@ namespace ILLightenComparer.Tests.ComparerTests
                 var x = _fixture.Create<SampleStruct<string>>();
                 var y = _fixture.Create<SampleStruct<string>>();
 
-                var comparer = new ComparerBuilder(c => c.SetCustomComparer<SampleStructCustomComparer>())
-                    .GetComparer<SampleStruct<string>>();
+                var comparer =
+                    new ComparerBuilder(c => c.SetCustomComparer<SampleStructCustomComparer>())
+                        .GetComparer<SampleStruct<string>>();
 
                 comparer.Compare(x, y).Should().Be(0);
             });
         }
 
-        private static void Test(Action action) => Enumerable.Range(0, Constants.SmallCount).AsParallel().ForAll(_ => action());
-
-        private readonly IFixture _fixture = FixtureBuilder.GetInstance();
-
+        // ReSharper disable once ClassNeverInstantiated.Local
         private sealed class SampleStructCustomComparer : CustomizableComparer<SampleStruct<string>>
         {
             public SampleStructCustomComparer() : base((_, __) => 0) { }

@@ -9,16 +9,6 @@ namespace ILLightenComparer.Equality.Comparisons
 {
     internal sealed class BacisEqualityComparison : IComparisonEmitter
     {
-        private readonly IVariable _variable;
-        private readonly MethodInfo _equalityMethod;
-
-        private BacisEqualityComparison(IVariable variable)
-        {
-            _variable = variable;
-            var variableType = _variable.VariableType;
-            _equalityMethod = variableType.GetMethod(nameof(Equals), new[] { variableType });
-        }
-
         public static BacisEqualityComparison Create(IVariable variable)
         {
             var variableType = variable.VariableType.GetUnderlyingType();
@@ -27,6 +17,16 @@ namespace ILLightenComparer.Equality.Comparisons
             }
 
             return null;
+        }
+
+        private readonly MethodInfo _equalityMethod;
+        private readonly IVariable _variable;
+
+        private BacisEqualityComparison(IVariable variable)
+        {
+            _variable = variable;
+            var variableType = _variable.VariableType;
+            _equalityMethod = variableType.GetMethod(nameof(Equals), new[] { variableType });
         }
 
         public ILEmitter Emit(ILEmitter il, Label _) =>

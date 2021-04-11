@@ -9,6 +9,16 @@ namespace ILLightenComparer.Shared.Comparisons
 {
     internal sealed class ArraysComparison : IComparisonEmitter
     {
+        public static ArraysComparison Create(ArrayComparisonEmitter arrayComparisonEmitter, IConfigurationProvider configuration, IVariable variable)
+        {
+            var variableType = variable.VariableType;
+            if (variableType.IsArray && variableType.GetArrayRank() == 1) {
+                return new ArraysComparison(arrayComparisonEmitter, configuration, variable);
+            }
+
+            return null;
+        }
+
         private readonly ArrayComparisonEmitter _arrayComparisonEmitter;
         private readonly IConfigurationProvider _configuration;
         private readonly IVariable _variable;
@@ -18,16 +28,6 @@ namespace ILLightenComparer.Shared.Comparisons
             _configuration = configuration;
             _variable = variable;
             _arrayComparisonEmitter = arrayComparisonEmitter;
-        }
-
-        public static ArraysComparison Create(ArrayComparisonEmitter arrayComparisonEmitter, IConfigurationProvider configuration, IVariable variable)
-        {
-            var variableType = variable.VariableType;
-            if (variableType.IsArray && variableType.GetArrayRank() == 1) {
-                return new ArraysComparison(arrayComparisonEmitter, configuration, variable);
-            }
-
-            return null;
         }
 
         public ILEmitter Emit(ILEmitter il, Label gotoNext)

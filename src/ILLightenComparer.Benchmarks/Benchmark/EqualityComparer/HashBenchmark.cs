@@ -28,15 +28,6 @@ namespace ILLightenComparer.Benchmarks.Benchmark.EqualityComparer
             _nito = nito;
         }
 
-        [GlobalSetup]
-        public void Setup()
-        {
-            for (var i = 0; i < N; i++) {
-                _one[i] = _fixture.Create<T>();
-                _out = _manual.GetHashCode(_one[i]);
-            }
-        }
-
         [Benchmark(Description = "IL Lighten Comparer")]
         public void IL_Comparer()
         {
@@ -58,6 +49,15 @@ namespace ILLightenComparer.Benchmarks.Benchmark.EqualityComparer
         {
             for (var i = 0; i < N; i++) {
                 _out = _nito.GetHashCode(_one[i]);
+            }
+        }
+
+        [GlobalSetup]
+        public void Setup()
+        {
+            for (var i = 0; i < N; i++) {
+                _one[i] = _fixture.Create<T>();
+                _out = _manual.GetHashCode(_one[i]);
             }
         }
     }

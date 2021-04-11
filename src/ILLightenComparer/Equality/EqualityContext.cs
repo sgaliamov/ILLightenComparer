@@ -10,9 +10,9 @@ namespace ILLightenComparer.Equality
 {
     internal sealed class EqualityContext : IEqualityComparerContext
     {
-        private readonly IConfigurationProvider _configuration;
         private readonly IComparerProvider _comparerProvider;
-        private readonly ComparersCollection _emittedComparers = new ComparersCollection();
+        private readonly IConfigurationProvider _configuration;
+        private readonly ComparersCollection _emittedComparers = new();
         private readonly GenericProvider _genericProvider;
 
         public EqualityContext(IComparerProvider comparerProvider, MembersProvider membersProvider, IConfigurationProvider configuration)
@@ -32,6 +32,11 @@ namespace ILLightenComparer.Equality
                 new GenericTypeBuilder(methodEmitters, _configuration));
         }
 
+        private IEqualityComparer<T> CreateInstance<T>(Type key) =>
+            _genericProvider
+                .EnsureComparerType(key)
+                .CreateInstance<IEqualityComparerContext, IEqualityComparer<T>>(this);
+
         public bool DelayedEquals<T>(T x, T y, CycleDetectionSet xSet, CycleDetectionSet ySet)
         {
             var comparer = _configuration.GetCustomEqualityComparer<T>();
@@ -40,8 +45,13 @@ namespace ILLightenComparer.Equality
             }
 
             if (!typeof(T).IsValueType) {
-                if (x == null) { return y == null; }
-                if (y == null) { return false; }
+                if (x == null) {
+                    return y == null;
+                }
+
+                if (y == null) {
+                    return false;
+                }
             }
 
             var xType = x.GetType();
@@ -81,22 +91,15 @@ namespace ILLightenComparer.Equality
             return GetHash(hashMethod, actualType, comparable, cycleDetectionSet);
         }
 
-        public MethodInfo GetStaticEqualsMethodInfo(Type type) => _genericProvider.GetStaticMethodInfo(type, nameof(Equals));
+        public IComparer<T> GetComparer<T>() => _comparerProvider.GetComparer<T>();
 
         public MethodInfo GetCompiledStaticEqualsMethod(Type type) => _genericProvider.GetCompiledStaticMethod(type, nameof(Equals));
 
-        public MethodInfo GetStaticHashMethodInfo(Type type) => _genericProvider.GetStaticMethodInfo(type, nameof(GetHashCode));
-
         public MethodInfo GetCompiledStaticHashMethod(Type type) => _genericProvider.GetCompiledStaticMethod(type, nameof(GetHashCode));
 
-        public IEqualityComparer<T> GetEqualityComparer<T>() => _configuration.GetCustomEqualityComparer<T>()
-            ?? (IEqualityComparer<T>)_emittedComparers.GetOrAdd(typeof(T), key => CreateInstance<T>(key));
-
-        public IComparer<T> GetComparer<T>() => _comparerProvider.GetComparer<T>();
-
-        private IEqualityComparer<T> CreateInstance<T>(Type key) => _genericProvider
-            .EnsureComparerType(key)
-            .CreateInstance<IEqualityComparerContext, IEqualityComparer<T>>(this);
+        public IEqualityComparer<T> GetEqualityComparer<T>() =>
+            _configuration.GetCustomEqualityComparer<T>()
+            ?? (IEqualityComparer<T>)_emittedComparers.GetOrAdd(typeof(T), CreateInstance<T>);
 
         private int GetHash<TComparable>(
             MethodInfo method,
@@ -116,6 +119,10 @@ namespace ILLightenComparer.Equality
 
             return compare(this, comparable, cycleDetectionSet);
         }
+
+        public MethodInfo GetStaticEqualsMethodInfo(Type type) => _genericProvider.GetStaticMethodInfo(type, nameof(Equals));
+
+        public MethodInfo GetStaticHashMethodInfo(Type type) => _genericProvider.GetStaticMethodInfo(type, nameof(GetHashCode));
     }
 
     internal interface IEqualityComparerContext : IEqualityComparerProvider, IContext, IComparerProvider

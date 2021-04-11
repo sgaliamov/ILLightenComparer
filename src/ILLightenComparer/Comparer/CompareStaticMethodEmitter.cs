@@ -13,11 +13,22 @@ namespace ILLightenComparer.Comparer
 {
     internal sealed class CompareStaticMethodEmitter : IStaticMethodEmitter
     {
+        private static void EmitCycleDetection(ILEmitter il, Type objectType) =>
+            il.Ceq(Ldc_I4(0),
+                   Or(TryAdd(Arg.SetX, Arg.X, objectType),
+                      TryAdd(Arg.SetY, Arg.Y, objectType)))
+              .Brfalse_S(out var next)
+              .Ret(Sub(GetCount(Arg.SetX), GetCount(Arg.SetY)))
+              .MarkLabel(next);
+
         private readonly ComparisonResolver _resolver;
 
-        public CompareStaticMethodEmitter(ComparisonResolver resolver) => _resolver = resolver;
+        public CompareStaticMethodEmitter(ComparisonResolver resolver)
+        {
+            _resolver = resolver;
+        }
 
-        public void Build(Type objectType, bool detecCycles, MethodBuilder staticMethodBuilder)
+        public void Build(Type objectType, bool detectCycles, MethodBuilder staticMethodBuilder)
         {
             using var il = staticMethodBuilder.CreateILEmitter();
 
@@ -35,7 +46,7 @@ namespace ILLightenComparer.Comparer
                 }
             }
 
-            if (detecCycles) {
+            if (detectCycles) {
                 EmitCycleDetection(il, objectType);
             }
 
@@ -43,7 +54,7 @@ namespace ILLightenComparer.Comparer
 
             emitter.Emit(il, exit);
 
-            if (detecCycles) {
+            if (detectCycles) {
                 il.Emit(Remove(Arg.SetX, Arg.X, objectType))
                   .Emit(Remove(Arg.SetY, Arg.Y, objectType));
             }
@@ -55,13 +66,5 @@ namespace ILLightenComparer.Comparer
 
         // no need detect cycle as flow goes outside context
         public bool NeedCreateCycleDetectionSets(Type objectType) => !objectType.IsComparable();
-
-        private static void EmitCycleDetection(ILEmitter il, Type objectType) =>
-            il.Ceq(Ldc_I4(0), 
-                  Or(TryAdd(Arg.SetX, Arg.X, objectType), 
-                     TryAdd(Arg.SetY, Arg.Y, objectType)))
-              .Brfalse_S(out var next)
-              .Ret(Sub(GetCount(Arg.SetX), GetCount(Arg.SetY)))
-              .MarkLabel(next);
     }
 }

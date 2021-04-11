@@ -12,11 +12,18 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests
 {
     public sealed class CycledObjectsTests
     {
+        private readonly IComparerBuilder _builder = new ComparerBuilder();
+        private readonly Fixture _fixture;
+
         public CycledObjectsTests()
         {
             _fixture = new Fixture();
             _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
         }
+
+        private IComparer<SelfSealed> ComparerSelfSealed => _builder.For<SelfSealed>(c => c.IgnoreMember(o => o.Id)).GetComparer();
+        private IComparer<SelfOpened> ComparerSelfOpened => _builder.For<SelfOpened>().GetComparer();
+        private IComparer<OneSealed> ComparerForOneSealed => _builder.For<OneSealed>().GetComparer();
 
         [Fact]
         public void Comparison_should_not_fail_because_of_generating_comparers_for_two_dependent_classes()
@@ -83,6 +90,53 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests
 
                 actual.Should().Be(expected);
             });
+        }
+
+        [Fact]
+        public void Detects_cycle_handles_equality_by_value()
+        {
+            var one = new SelfSealed { Value = 1 };
+            one.Second = new SelfSealed {
+                First = one,
+                Value = 1
+            };
+            /*
+                  1-1
+                 / \
+                N   2-1
+            cycle: / \
+                  1-1 N
+                 / \ 
+                N   2-1
+            */
+
+            var other = new SelfSealed {
+                Second = new SelfSealed {
+                    First = new SelfSealed {
+                        Second = new SelfSealed { Value = 0 },
+                        Value = 4
+                    },
+                    Value = 4
+                },
+                Value = 3
+            };
+            /*
+                  3-3
+                 / \
+                N   4-4
+                   / \
+                  5-4 N
+                 / \
+                N   6-6
+            */
+
+            var expected = SelfSealed.Comparer.Compare(one, other);
+            var actual = ComparerSelfSealed.Compare(one, other);
+
+            using (new AssertionScope()) {
+                expected.Should().Be(-1);
+                actual.Should().Be(expected);
+            }
         }
 
         [Fact]
@@ -164,7 +218,9 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests
             };
 
             var expected = SelfSealed.Comparer.Compare(x, y);
-            var comparer = new ComparerBuilder().For<SelfSealed>(c => c.IgnoreMember(o => o.Id)).GetComparer<SelfSealed[]>();
+            var comparer = new ComparerBuilder()
+                           .For<SelfSealed>(c => c.IgnoreMember(o => o.Id))
+                           .GetComparer<SelfSealed[]>();
             var actual = comparer.Compare(x, y);
 
             using (new AssertionScope()) {
@@ -174,60 +230,11 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests
         }
 
         [Fact]
-        public void Detects_cycle_handles_equalty_by_value()
-        {
-            var one = new SelfSealed { Value = 1 };
-            one.Second = new SelfSealed {
-                First = one,
-                Value = 1
-            };
-            /*
-                  1-1
-                 / \
-                N   2-1
-            cycle: / \
-                  1-1 N
-                 / \ 
-                N   2-1
-            */
-
-            var other = new SelfSealed {
-                Second = new SelfSealed {
-                    First = new SelfSealed {
-                        Second = new SelfSealed { Value = 0 },
-                        Value = 4
-                    },
-                    Value = 4
-                },
-                Value = 3
-            };
-            /*
-                  3-3
-                 / \
-                N   4-4
-                   / \
-                  5-4 N
-                 / \
-                N   6-6
-            */
-
-            var expected = SelfSealed.Comparer.Compare(one, other);
-            var actual = ComparerSelfSealed.Compare(one, other);
-
-            using (new AssertionScope()) {
-                expected.Should().Be(-1);
-                actual.Should().Be(expected);
-            }
-        }
-
-        [Fact]
         public void Object_with_bigger_cycle_is_bigger()
         {
             var one = new SelfSealed();
             one.First = new SelfSealed {
-                First = new SelfSealed {
-                    First = one
-                }
+                First = new SelfSealed { First = one }
             };
             var other = new SelfSealed { First = one };
 
@@ -281,11 +288,5 @@ namespace ILLightenComparer.Tests.ComparerTests.CycleTests
                 actual.Should().BePositive();
             }
         }
-
-        private IComparer<SelfSealed> ComparerSelfSealed => _builder.For<SelfSealed>(c => c.IgnoreMember(o => o.Id)).GetComparer();
-        private readonly Fixture _fixture;
-        private IComparer<SelfOpened> ComparerSelfOpened => _builder.For<SelfOpened>().GetComparer();
-        private IComparer<OneSealed> ComparerForOneSealed => _builder.For<OneSealed>().GetComparer();
-        private readonly IComparerBuilder _builder = new ComparerBuilder();
     }
 }

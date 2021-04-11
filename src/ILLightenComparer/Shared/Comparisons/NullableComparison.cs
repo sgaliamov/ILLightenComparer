@@ -10,6 +10,19 @@ namespace ILLightenComparer.Shared.Comparisons
 {
     internal sealed class NullableComparison : IComparisonEmitter
     {
+        public static NullableComparison Create(
+            IResolver resolver,
+            EmitterDelegate checkForIntermediateResultEmitter,
+            EmitCheckNullablesForValueDelegate emitCheckNullablesForValue,
+            IVariable variable)
+        {
+            if (variable.VariableType.IsNullable()) {
+                return new NullableComparison(resolver, checkForIntermediateResultEmitter, emitCheckNullablesForValue, variable);
+            }
+
+            return null;
+        }
+
         private readonly EmitterDelegate _checkForIntermediateResultEmitter;
         private readonly EmitCheckNullablesForValueDelegate _emitCheckNullablesForValue;
         private readonly IResolver _resolver;
@@ -50,18 +63,5 @@ namespace ILLightenComparer.Shared.Comparisons
         }
 
         public ILEmitter EmitCheckForResult(ILEmitter il, Label next) => _checkForIntermediateResultEmitter(il, next);
-
-        public static NullableComparison Create(
-            IResolver resolver,
-            EmitterDelegate checkForIntermediateResultEmitter,
-            EmitCheckNullablesForValueDelegate emitCheckNullablesForValue,
-            IVariable variable)
-        {
-            if (variable.VariableType.IsNullable()) {
-                return new NullableComparison(resolver, checkForIntermediateResultEmitter, emitCheckNullablesForValue, variable);
-            }
-
-            return null;
-        }
     }
 }
